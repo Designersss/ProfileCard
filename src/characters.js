@@ -2,11 +2,11 @@
 import { escapeXML } from './utils.js';
 
 const people = {
-  noah: {skin:'#F5C6A9',shadow:'#EFAE91',hair:'#27243C',hoodie:'#363449',hoodie2:'#534C76',fringe:'wavy',accessory:'laptop',eyes:'#2A2536'},
-  ivy: {skin:'#EFC8A5',shadow:'#DDA37C',hair:'#624134',hoodie:'#F7B87E',hoodie2:'#E6906F',fringe:'swept',accessory:'cap',eyes:'#3A2A2C'},
-  kai: {skin:'#EBC09D',shadow:'#D6A184',hair:'#272638',hoodie:'#8078DF',hoodie2:'#A7A0F4',fringe:'short',accessory:'glasses',eyes:'#302639'},
-  mira: {skin:'#F2C7B1',shadow:'#DC9D89',hair:'#A65B85',hoodie:'#F7B2C6',hoodie2:'#F28BAC',fringe:'bob',accessory:'headphones',eyes:'#4A2D47'},
-  leo: {skin:'#E6B59C',shadow:'#CF937F',hair:'#3F313B',hoodie:'#42628B',hoodie2:'#678DB4',fringe:'swept',accessory:'beanie',eyes:'#352934'}
+  noah: {skin:'#F5C6A9',shadow:'#EFAE91',hair:'#1B1B27',hoodie:'#151927',hoodie2:'#343D53',fringe:'wavy',accessory:'laptop',eyes:'#2A2536'},
+  ivy: {skin:'#EFC8A5',shadow:'#DDA37C',hair:'#332C32',hoodie:'#382D37',hoodie2:'#AE6659',fringe:'swept',accessory:'cap',eyes:'#3A2A2C'},
+  kai: {skin:'#EBC09D',shadow:'#D6A184',hair:'#151923',hoodie:'#192C39',hoodie2:'#44617D',fringe:'short',accessory:'glasses',eyes:'#302639'},
+  mira: {skin:'#F2C7B1',shadow:'#DC9D89',hair:'#A16C83',hoodie:'#242133',hoodie2:'#4D4266',fringe:'bob',accessory:'headphones',eyes:'#4A2D47'},
+  leo: {skin:'#E6B59C',shadow:'#CF937F',hair:'#1C202C',hoodie:'#182C3C',hoodie2:'#30556A',fringe:'swept',accessory:'beanie',eyes:'#352934'}
 };
 
 function hairBack(person) {
@@ -40,13 +40,12 @@ function human(id) {
   <ellipse cx="279" cy="191" rx="19" ry="27" fill="${p.skin}"/>
   <path d="M124 165c0-55 24-89 78-92 53-3 80 38 80 96v43c0 54-35 95-81 95-46 0-77-36-77-95Z" fill="${p.skin}"/>
   <path d="M129 216c10 43 34 71 70 75" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="12" stroke-linecap="round" fill="none"/>
-  <ellipse cx="151" cy="225" rx="16" ry="9" fill="#E88E92" opacity=".35"/>
-  <ellipse cx="253" cy="225" rx="16" ry="9" fill="#E88E92" opacity=".35"/>
-  <path d="M158 176c7-6 18-7 28-3m38 0c9-5 20-4 28 3" stroke="${p.hair}" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <ellipse cx="175" cy="190" rx="6.5" ry="8.5" fill="${p.eyes}"/><ellipse cx="231" cy="190" rx="6.5" ry="8.5" fill="${p.eyes}"/>
+
+  <path d="M158 169c7-5 18-5 28-2m38 0c9-4 20-3 28 2" stroke="${p.hair}" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <ellipse cx="175" cy="190" rx="5.5" ry="6.5" fill="${p.eyes}"/><ellipse cx="231" cy="190" rx="5.5" ry="6.5" fill="${p.eyes}"/>
   <circle cx="177" cy="187" r="2" fill="white"/><circle cx="233" cy="187" r="2" fill="white"/>
   <path d="M201 203l-4 12 6 2" stroke="${p.shadow}" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <path d="M190 242q12 11 26 0" stroke="#AB686D" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M191 242q12 4 24-2" stroke="#88535B" stroke-width="3" fill="none" stroke-linecap="round"/>
   ${hairFront(p)}
   <path d="M175 279l-17 28 37 24 10-22m30-30 17 28-34 24-12-22" fill="${p.hoodie}" stroke="${p.hoodie2}" stroke-width="4"/>
   <path d="M182 321l-3 32m46-32 3 32" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="4" stroke-linecap="round"/>
@@ -64,7 +63,7 @@ function cat() {
   <ellipse cx="162" cy="210" rx="14" ry="17" fill="#E8E19E"/><ellipse cx="244" cy="210" rx="14" ry="17" fill="#E8E19E"/>
   <ellipse cx="165" cy="212" rx="6" ry="14" fill="#2A2D2C"/><ellipse cx="241" cy="212" rx="6" ry="14" fill="#2A2D2C"/>
   <path d="M194 239q9-7 18 0l-9 9Z" fill="#E5A1B7"/><path d="M203 249q-10 12-22 0m22 0q12 12 23 0" stroke="#DDC6D3" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <path d="m147 247-39-8m38 15-43 6m159-13 39-8m-38 15 43 6" stroke="#D1C5D5" stroke-width="3" opacity=".65" stroke-linecap="round"/>
+
   <path d="M139 316c-12 9-17 32-11 46m146-46c13 10 19 34 11 47" stroke="#75718F" stroke-width="11" stroke-linecap="round" fill="none"/>
   <path d="M283 326c43-26 76-6 64 31" stroke="#27263B" stroke-width="19" fill="none" stroke-linecap="round"/>
  </g>`;
@@ -74,12 +73,12 @@ function robot() {
  return `<g>
   <ellipse cx="201" cy="363" rx="128" ry="16" fill="#343255" opacity=".12"/>
   <path d="M88 377c3-62 39-102 111-102 70 0 107 37 112 102Z" fill="#8585C9"/><path d="M140 282c28 37 91 40 122 1" fill="none" stroke="#B9B7ED" stroke-width="14" stroke-linecap="round"/>
-  <path d="M199 91V66" stroke="#595783" stroke-width="12" stroke-linecap="round"/><circle cx="199" cy="54" r="16" fill="#FF9DAA"/>
+  <path d="M199 91V66" stroke="#595783" stroke-width="12" stroke-linecap="round"/><circle cx="199" cy="54" r="16" fill="#4AE9DD"/>
   <rect x="94" y="100" width="213" height="182" rx="65" fill="#DDE5FF" stroke="#57547F" stroke-width="11"/>
   <rect x="117" y="135" width="166" height="112" rx="39" fill="#55557F"/>
   <rect x="83" y="172" width="23" height="59" rx="11" fill="#A9ACD8"/><rect x="294" y="172" width="23" height="59" rx="11" fill="#A9ACD8"/>
   <ellipse cx="165" cy="184" rx="15" ry="22" fill="#A3F2EF"/><ellipse cx="235" cy="184" rx="15" ry="22" fill="#A3F2EF"/>
-  <path d="M174 217q26 22 53 0" stroke="#F9A8CA" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M174 217q26 22 53 0" stroke="#7AECB6" stroke-width="5" fill="none" stroke-linecap="round"/>
   <circle cx="199" cy="321" r="11" fill="#FAE7A2"/><path d="M153 354h91" stroke="#C7C7F5" stroke-width="7" stroke-linecap="round"/>
  </g>`;
 }

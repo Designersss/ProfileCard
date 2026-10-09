@@ -32,15 +32,41 @@ test('randomize preserves identity and chooses valid combinations',()=>{
 test('settings sanitizer rejects malformed persisted data',()=>{
  const s=getSavedState({name:'x'.repeat(100),character:'external',format:'destroyed',sceneColor:'red',tags:['one','two','three','four']});
  assert.equal(s.name.length,32);assert.equal(s.character,'noah');assert.equal(s.format,'square');
- assert.equal(s.sceneColor,'#D7CBFF');assert.equal(s.tags.length,3);
+ assert.equal(s.sceneColor,'#141428');assert.equal(s.tags.length,3);
 });
 test('SVG cards support square and wide formats with embedded art',()=>{
  for(const format of Object.keys(FORMATS)){
   for(const character of CHARACTERS){
    const svg=renderCardSVG({...createDefaultState(),format,character:character.id});
    assert.match(svg,/<svg xmlns=/);assert.ok(svg.includes(`viewBox="0 0 ${FORMATS[format].width} ${FORMATS[format].height}"`));
-   assert.ok(svg.includes('Denis'));assert.ok(svg.includes('builder'));
+   assert.ok(svg.includes('Denis'));assert.ok(svg.includes('BUILDER'));
   }
  }
  assert.ok(characterSVG('pixel').includes('<svg'));
+});
+
+test('aura palettes and scenes render in both export layouts',()=>{
+ for(const palette of PALETTES){
+  for(const scene of SCENES){
+   const state={...createDefaultState(),scene:scene.id,sceneColor:palette.scene,cardColor:palette.card,accentColor:palette.accent};
+   const square=renderCardSVG({...state,format:'square'},{animated:false});
+   const wide=renderCardSVG({...state,format:'wide'},{animated:false});
+   assert.match(square,/DIGITAL|IDENTITY/);
+   assert.ok(wide.includes('AURA / ONLINE'));
+   assert.ok(!square.includes('aura-character'));
+   assert.ok(!wide.includes('aura-glow'));
+  }
+ }
+});
+test('reroll always changes palette and preserves the exported profile',()=>{
+ const state={...createDefaultState(),photo:'data:image/png;base64,AAAA',avatarMode:'upload'};
+ const next=randomize(state,()=>0);
+ assert.notEqual(next.theme,state.theme);
+ for(const key of ['name','username','bio','photo','avatarMode','format'])assert.equal(next[key],state[key]);
+});
+test('saved v1 pastel presets migrate without losing user identity or custom colors',()=>{
+ const old=getSavedState({name:'Persisted name',username:'user',theme:'lilac',scene:'dream',sceneColor:'#D7CBFF',cardColor:'#FFFFFF',accentColor:'#8064F4'});
+ assert.equal(old.name,'Persisted name');assert.equal(old.theme,'eclipse');assert.equal(old.scene,'halo');assert.equal(old.sceneColor,'#141428');
+ const custom=getSavedState({theme:'custom',scene:'grid',sceneColor:'#010203',cardColor:'#FFFEFD',accentColor:'#445566'});
+ assert.equal(custom.theme,'custom');assert.equal(custom.sceneColor,'#010203');
 });
