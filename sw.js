@@ -1,8 +1,9 @@
 /* Offline-first shell; update the version when releasing changes. */
-const CACHE='profilecard-v1-20261009';
+const CACHE='profilecard-v1-2-20261009';
 const SHELL=[
   './','./index.html','./styles.css',
   './src/app.js','./src/card.js','./src/characters.js','./src/utils.js',
+  './src/gif.js','./src/gif-worker.js',
   './manifest.webmanifest','./assets/favicon.svg',
   './assets/icon-192.png','./assets/icon-512.png','./assets/icon-maskable-512.png'
 ];

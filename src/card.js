@@ -39,7 +39,7 @@ function photoSVG(data, x, y, width, height) {
   if (!data || !/^data:image\/(png|jpeg|webp);base64,/i.test(data)) return '';
   return `<defs><clipPath id="pcPhotoClip"><rect x="${x}" y="${y}" width="${width}" height="${height}" rx="24"/></clipPath></defs><rect x="${x-5}" y="${y-5}" width="${width+10}" height="${height+10}" rx="28" fill="#FFFFFF" fill-opacity=".11" stroke="#FFFFFF" stroke-opacity=".3"/><image href="${escapeXML(data)}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" clip-path="url(#pcPhotoClip)"/>`;
 }
-export function renderCardSVG(state, {animated = true} = {}) {
+export function renderCardSVG(state, {animated = true, time = 0} = {}) {
   const wide = state.format === 'wide';
   const {width:w, height:h} = FORMATS[state.format] || FORMATS.square;
   const base = normalizeHex(state.sceneColor, '#111629');
@@ -51,13 +51,14 @@ export function renderCardSVG(state, {animated = true} = {}) {
   const username = (state.username || 'username').replace(/^@+/, '').trim();
   const bio = (state.bio || 'BUILDING ON THE INTERNET').trim();
   const bioLines = wrapText(bio, wide ? 28 : 42, 2);
+  const phase=(time % 3.2)/3.2*2*Math.PI;
   const scene = graphics(state.scene, base, accent);
   const frame = wide ? `M26 26H1174V604H26Z` : `M22 22H698V698H22Z`;
   const glyphs = `<g stroke="${accent}" stroke-width="3" fill="none" opacity=".85"><path d="M42 ${wide?145:144}h50m-25-25v50M${w-108} ${wide?495:415}h56m-28-28v56"/><circle cx="${w-60}" cy="60" r="12"/><path d="M${w-72} 60h24"/></g>`;
   const charX = wide ? 53 : 115, charY = wide ? 103 : 57, charW = wide ? 500 : 490, charH = wide ? 473 : 440;
   const art = state.avatarMode === 'upload' && state.photo
     ? photoSVG(state.photo, wide?108:154, wide?142:106, wide?384:412, wide?358:340)
-    : `<g class="${animated?'aura-character':''}">${characterSVG(state.character, {x:charX,y:charY,width:charW,height:charH})}</g>`;
+    : `<g class="${animated?'aura-character':''}">${characterSVG(state.avatar, {x:charX,y:charY,width:charW,height:charH,animated,time})}</g>`;
   const aurora = wide ? `<ellipse cx="306" cy="304" rx="218" ry="220" fill="url(#pcAura)" opacity=".83"/>` : `<ellipse cx="358" cy="259" rx="226" ry="222" fill="url(#pcAura)" opacity=".8"/>`;
   let info;
   if (wide) {
@@ -87,12 +88,12 @@ export function renderCardSVG(state, {animated = true} = {}) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="ProfileCard for ${escapeXML(name)}" data-format="${state.format}">
     <defs><linearGradient id="pcBackground" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${mix(base,accent,.13)}"/><stop offset="1" stop-color="${mix(base,'#000000',.24)}"/></linearGradient><radialGradient id="pcAura"><stop offset="0" stop-color="${accent}" stop-opacity=".7"/><stop offset=".48" stop-color="${accent}" stop-opacity=".26"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs>
     <rect width="${w}" height="${h}" fill="url(#pcBackground)"/>
-    <g transform="scale(${w/720} ${h/720})">${scene}</g>
+    <g transform="scale(${w/720} ${h/720}) translate(${(Math.sin(phase)*7).toFixed(2)} ${(Math.cos(phase)*6).toFixed(2)})">${scene}</g>
     <path d="${frame}" fill="none" stroke="${mix(base,'#FFFFFF',.65)}" stroke-opacity=".25" stroke-width="1.5"/>
-    <g class="${animated?'aura-glow':''}">${aurora}</g>
-    <g class="${animated?'aura-lines':''}">${glyphs}</g>
+    <g opacity="${(.88+.12*Math.cos(phase)).toFixed(3)}" class="${animated?'aura-glow':''}">${aurora}</g>
+    <g transform="translate(${(Math.cos(phase)*4).toFixed(2)} ${(Math.sin(phase)*4).toFixed(2)})" class="${animated?'aura-lines':''}">${glyphs}</g>
     ${art}
     ${info}
-    ${wide ? txt('PROFILECARD  //  V1.1',46,593,14,contrastColor(base),{weight:700,spacing:1.7}) : txt('PROFILECARD  /  V1.1',45,42,13,contrastColor(base),{weight:800,spacing:1.5})}
+    ${wide ? txt('PROFILECARD  //  V1.2',46,593,14,contrastColor(base),{weight:700,spacing:1.7}) : txt('PROFILECARD  /  V1.2',45,42,13,contrastColor(base),{weight:800,spacing:1.5})}
   </svg>`;
 }

@@ -1,6 +1,6 @@
 {
   "name": "profilecard",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "Create a playful, personalized identity card. Offline-first PWA with no account or backend.",

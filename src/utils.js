@@ -65,18 +65,52 @@ export const SCENES = Object.freeze([
   {id:'halo',name:'Halo'}, {id:'grid',name:'Grid'}, {id:'beam',name:'Beam'},
   {id:'orbit',name:'Orbit'}, {id:'haze',name:'Haze'}, {id:'shards',name:'Shards'}
 ]);
-export const CHARACTERS = Object.freeze([
-  {id:'noah',name:'Noah',type:'human'}, {id:'ivy',name:'Ivy',type:'human'},
-  {id:'kai',name:'Kai',type:'human'}, {id:'mira',name:'Mira',type:'human'},
-  {id:'leo',name:'Leo',type:'human'}, {id:'pixel',name:'Pixel',type:'animal'},
-  {id:'byte',name:'Byte',type:'robot'}
-]);
+// The only character model: independent layers with explicit, validated options.
+export const CHARACTER_OPTIONS = Object.freeze({
+  face:['oval','round','angular','long','soft-square'],
+  skin:['#F4C7A5','#DEAB8B','#BC8062','#925E46','#6C4337','#E8D6C8'],
+  hair:['messy','curtain','crop','bob','long','tied','undercut','buzz'],
+  hairColor:['#151827','#322626','#705047','#A96A43','#C5A07B','#C7C5D4','#6B61A5','#E49CB2','#3F7385','#EEEEEF'],
+  eyes:['focused','relaxed','sharp','wide','sleepy','closed'],
+  eyeColor:['#26243B','#533E38','#4D6681','#558572','#84619A','#BFA06A'],
+  brows:['natural','straight','sharp','arched'],
+  mouth:['neutral','smirk','smile','serious','grin','open'],
+  outfit:['hoodie','jacket','tee','turtleneck','bomber','shirt'],
+  outfitColor:['#171B29','#353F57','#6D57A5','#3D7F80','#CA655D','#E4C6A1','#E7E9F0','#C69044'],
+  accessory:['none','glasses','headphones','earrings','beanie','visor','chain','mask']
+});
+const legacyCharacters = Object.freeze({
+  noah:{hair:'messy',outfit:'hoodie'},ivy:{hair:'long',outfit:'jacket',hairColor:'#322626'},
+  kai:{hair:'crop',accessory:'glasses'},mira:{hair:'bob',accessory:'headphones',hairColor:'#E49CB2'},
+  leo:{hair:'undercut',accessory:'beanie'},pixel:{hair:'buzz'},byte:{hair:'crop'}
+});
+export function createDefaultCharacter(){return {
+  face:'angular',skin:'#DEAB8B',hair:'messy',hairColor:'#151827',eyes:'focused',eyeColor:'#26243B',
+  brows:'sharp',mouth:'smirk',outfit:'hoodie',outfitColor:'#171B29',accessory:'none'
+};}
+export function sanitizeCharacter(source, legacyId) {
+  const legacy=legacyCharacters[legacyId]||{};
+  const values=source&&typeof source==='object'&&!Array.isArray(source)?source:{};
+  const defaults={...createDefaultCharacter(),...legacy};
+  return Object.fromEntries(Object.entries(CHARACTER_OPTIONS).map(([key,options])=>
+    [key,options.includes(values[key])?values[key]:defaults[key]]));
+}
+export function randomizeCharacter(character,random=Math.random){
+  const previous=sanitizeCharacter(character);
+  const result=Object.fromEntries(Object.entries(CHARACTER_OPTIONS).map(([key,options])=>
+    [key,options[Math.min(options.length-1,Math.max(0,Math.floor(random()*options.length)))] ]));
+  if(Object.keys(result).every(key=>result[key]===previous[key])){
+    const alternatives=CHARACTER_OPTIONS.hair;
+    result.hair=alternatives[(alternatives.indexOf(result.hair)+1)%alternatives.length];
+  }
+  return result;
+}
 export const FORMATS = Object.freeze({square:{width:720,height:720},wide:{width:1200,height:630}});
 
 export function createDefaultState() {
   return {
     name:'Denis',username:'deni',bio:'building things on the internet',
-    tags:['builder','designer'],character:'noah',avatarMode:'character',
+    tags:['builder','designer'],avatar:createDefaultCharacter(),avatarMode:'character',
     theme:'eclipse',scene:'halo',sceneColor:'#141428',cardColor:'#202039',
     accentColor:'#997CFF',format:'square'
   };
@@ -92,14 +126,13 @@ export function getSavedState(source) {
   const legacyTheme = !isCurrentTheme && !isCustomTheme;
   const theme = isCurrentTheme || isCustomTheme ? source.theme : defaults.theme;
   const scene = SCENES.some(p=>p.id===source.scene) ? source.scene : defaults.scene;
-  const character = CHARACTERS.some(p=>p.id===source.character) ? source.character : defaults.character;
   return {
     ...defaults,
     name:sanitizeText(source.name ?? defaults.name,MAX.name),
     username:sanitizeText(source.username ?? defaults.username,MAX.username).replace(/^@+/,''),
     bio:sanitizeText(source.bio ?? defaults.bio,MAX.bio),
     tags:Array.isArray(source.tags)?source.tags.filter(x=>typeof x==='string').slice(0,MAX.tags).map(x=>sanitizeText(x,MAX.tag)):defaults.tags,
-    character,theme,scene,
+    avatar:sanitizeCharacter(source.avatar,source.character),theme,scene,
     sceneColor:legacyTheme?defaults.sceneColor:normalizeHex(source.sceneColor,defaults.sceneColor),
     cardColor:legacyTheme?defaults.cardColor:normalizeHex(source.cardColor,defaults.cardColor),
     accentColor:legacyTheme?defaults.accentColor:normalizeHex(source.accentColor,defaults.accentColor),
@@ -113,11 +146,9 @@ export function randomize(state, random = Math.random) {
   // Avoid a no-op reroll even with a deterministic random source.
   if (nextPalette.id === state.theme) nextPalette = PALETTES[(PALETTES.indexOf(nextPalette)+1)%PALETTES.length];
   const nextScene = SCENES[Math.floor(random()*SCENES.length)];
-  const nextCharacter = CHARACTERS[Math.floor(random()*CHARACTERS.length)];
   return {
     ...state,
     theme:nextPalette.id,scene:nextScene.id,
-    sceneColor:nextPalette.scene,cardColor:nextPalette.card,accentColor:nextPalette.accent,
-    character:state.avatarMode==='upload'?state.character:nextCharacter.id
+    sceneColor:nextPalette.scene,cardColor:nextPalette.card,accentColor:nextPalette.accent
   };
 }
