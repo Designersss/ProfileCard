@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#F9F9FC" />
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="Make your internet self a little more you. Create and download a playful profile card for free — no account needed." />
+  <meta property="og:title" content="profilecard. — Your internet self, but cooler." />
+  <meta property="og:description" content="A tiny, colorful card maker for the internet. Pick a character, mix a vibe, and make it yours." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ProfileCard" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./assets/icon-192.png" />
+  <link rel="stylesheet" href="./styles.css" />
+  <title>profilecard. — Your internet self, but cooler.</title>
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <div class="page-glow page-glow-one" aria-hidden="true"></div>
+  <div class="page-glow page-glow-two" aria-hidden="true"></div>
+  <div class="site-wrap">
+    <header class="site-header">
+      <div class="brand-wrap">
+        <a class="wordmark" href="./" aria-label="ProfileCard home">profilecard<span>.</span></a>
+        <span class="brand-subtitle">your internet self, but cooler</span>
+      </div>
+      <div class="header-actions">
+        <span class="header-pill"><span class="mini-spark">✦</span> free little internet tool</span>
+        <button class="install-button" type="button" id="installBtn" aria-label="Install ProfileCard as an app">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
+          <span>Install app</span>
+        </button>
+      </div>
+    </header>
+    <main class="workspace" aria-label="ProfileCard creator">
+      <section class="preview-panel" aria-labelledby="previewHeading">
+        <div class="panel-topline"><div><p class="eyebrow">YOUR LITTLE CORNER OF THE INTERNET</p><h1 id="previewHeading">Make it yours<span class="heading-star">✳</span></h1></div><span class="live-label"><span class="live-dot"></span> live preview</span></div>
+        <div class="preview-stage" id="previewStage">
+          <div class="stage-confetti" id="magicBurst" aria-hidden="true"><span>✧</span><span>✦</span><span>✳</span><span>✧</span><span>✦</span></div>
+          <div id="cardMount" class="card-mount" aria-live="off"></div>
+        </div>
+        <div class="preview-actions">
+          <button type="button" class="action-primary" id="downloadBtn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v3h16v-3"/></svg> Download PNG</button>
+          <button type="button" class="action-secondary" id="copyBtn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg> Copy image</button>
+        </div>
+        <p class="preview-note"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6Z"/></svg> No watermark. No sign-up. Just a really good card.</p>
+      </section>
+      <section class="editor-panel" aria-labelledby="editorHeading">
+        <div class="editor-heading"><div><p class="eyebrow">THE FUN PART</p><h2 id="editorHeading">Make some magic <span>✦</span></h2></div><span class="tiny-number">01 / 01</span></div>
+        <form id="editorForm" novalidate>
+          <div class="field-row">
+            <label class="field"> <span class="field-label">Name</span><input id="nameInput" name="name" maxlength="32" autocomplete="nickname" placeholder="Your name" /></label>
+            <label class="field"> <span class="field-label">Username</span><input id="usernameInput" name="username" maxlength="24" spellcheck="false" placeholder="@username" /></label>
+          </div>
+          <label class="field field-bio"><span class="field-label">Bio <span class="field-help">say a little something</span></span><textarea id="bioInput" name="bio" maxlength="100" rows="2" placeholder="What are you all about?"></textarea><span class="field-count" id="bioCount">0 / 100</span></label>
+          <div class="editor-section" id="avatarSection"><div class="section-title"><span>Character or photo</span><span class="section-hint">pick your look</span></div><div class="two-way-switch" role="group" aria-label="Avatar type"><button type="button" id="characterMode" class="active" aria-pressed="true">Characters</button><button type="button" id="photoMode" aria-pressed="false">My photo</button></div><div class="character-grid" id="charactersList" aria-label="Choose a character"></div><div class="upload-zone" id="uploadZone" hidden><label for="avatarUpload" class="upload-button"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v4h16v-4"/></svg> Choose photo (max 4 MB)</label><input id="avatarUpload" type="file" accept="image/png,image/jpeg,image/webp" /><p>Stored only on this device. JPG, PNG, or WebP.</p></div></div>
+          <div class="editor-section"><div class="section-title"><span>Color theme</span><span class="section-hint">find your vibe</span></div><div class="palette-list" id="paletteList" role="group" aria-label="Choose color theme"></div></div>
+          <div class="editor-section"><div class="section-title"><span>Background</span><span class="section-hint">set the scene</span></div><div class="scene-grid" id="sceneList" role="group" aria-label="Choose background scene"></div></div>
+          <div class="editor-section"><div class="section-title"><span>Your colors</span><span class="section-hint">make them personal</span></div><div class="color-row"><label class="color-field"><span>Background</span><span class="color-input-wrap"><input type="color" id="sceneColorInput" aria-label="Choose background color" /><output id="sceneColorValue"></output></span></label><label class="color-field"><span>Card color</span><span class="color-input-wrap"><input type="color" id="cardColorInput" aria-label="Choose information card color" /><output id="cardColorValue"></output></span></label><label class="color-field"><span>Accent</span><span class="color-input-wrap"><input type="color" id="accentColorInput" aria-label="Choose accent color" /><output id="accentColorValue"></output></span></label></div></div>
+          <div class="editor-section"><div class="section-title"><span>Little tags</span><span class="section-hint">up to 3</span></div><div class="tag-row" id="tagList"></div><div class="add-tag-wrap"><label class="sr-only" for="tagInput">Add a tag</label><input id="tagInput" maxlength="18" placeholder="e.g. dreamer" /><button type="button" id="addTagBtn" aria-label="Add tag">+</button></div></div>
+          <div class="editor-section compact-section"><div class="section-title"><span>Format</span><span class="section-hint">ready for wherever</span></div><div class="format-row" role="group" aria-label="Choose image format"><button id="squareBtn" type="button" aria-pressed="true" class="active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/></svg> Square</button><button id="wideBtn" type="button" aria-pressed="false"><svg width="20" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="3"/></svg> Wide</button></div></div>
+          <button type="button" class="random-button" id="randomBtn"><span class="random-emoji">✦</span> Surprise me <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 4 6 6m4 4 6 6M16 4h4v4M4 16v4h4M14 10l6-6M4 20l6-6"/></svg></button>
+        </form>
+        <div class="privacy-row"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Your cards stay on your device. Works offline as an app.</div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>✳ Made for the internet, with a little love.</span><span>profilecard. / 2026</span></footer>
+  </div>
+  <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
+  <dialog id="installDialog" class="install-dialog"><div class="dialog-inner"><div class="dialog-icon">✦</div><h2>Take ProfileCard with you</h2><p id="installInstructions">Use your browser menu to add ProfileCard to your home screen.</p><button type="button" id="dismissInstall" class="action-primary">Got it</button></div></dialog>
+</body>
+</html>
