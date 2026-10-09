@@ -1,6 +1,6 @@
 # profilecard.
 
-**Your internet self, but cooler.** A free, playful identity card editor with original vector characters, lovely scenes, Magic Random, PNG export, local-first settings and full offline-capable PWA installation.
+**Make your own aura.** A free, full-viewport identity card studio with original vector characters, six graphic aura scenes, Reroll Aura, PNG export, local-first settings and offline-capable PWA installation.
 
 ## Run
 
@@ -14,11 +14,11 @@ Open `http://localhost:4173`. Test with `npm run check`.
 
 ## Features
 
-- Responsive desktop/mobile editor and animated SVG preview
+- Full-viewport desktop/mobile studio with Identity / Character / Aura tabs; the document never scrolls (on small screens only the control tab content may scroll)
 - 7 original vector characters or an uploaded photo (never sent to a server)
-- 8 curated palettes, 6 scenes and custom scene/card/accent colors
+- 8 aura palettes (Eclipse, Phantom, Drift, Nova, Zenith, Frost, Chrome, Ember), 6 geometric aura scenes and custom scene/panel/accent colors
 - Name, @handle, description and up to 3 tags
-- Magic Random preserving identity fields and uploaded photos
+- Reroll Aura preserving identity fields and uploaded photos, and avoiding unchanged palette selection
 - Square 1080×1080 and wide 1200×630 PNG, plus Copy Image where supported
 - Installable PWA, offline shell, local preferences, IndexedDB photo persistence
 - Accessible forms, reduced-motion support and keyboard navigability
@@ -50,6 +50,14 @@ Deploy the repository root to any **HTTPS static host** (Cloudflare Pages, Netli
 ### PWA releases
 
 When shipping a new version, increment the `CACHE` value in `sw.js` to replace pre-cached assets. Service worker installation does not force-refresh an editor with unsaved work. Chrome's install UI is not available in every browser; the in-app button offers an alternative instruction dialog.
+
+## Aura redesign v1.1
+
+- Page-level scrolling is disabled; the stage and editor resize within `100dvh`. On smaller devices the active tab can scroll internally so fields are never clipped.
+- Square and wide cards use darker colors, editorial typography, restrained glow/geometry, and less childish character expressions.
+- Tabs use native buttons, `role=tablist`, `aria-selected`, and arrow-key/Home/End keyboard navigation.
+- Existing custom color selections survive migration; legacy pastel presets migrate to the new Eclipse defaults without losing profile text.
+- `prefers-reduced-motion` disables ambient movement, reroll effects, and transitions.
 
 ## Security & privacy
 

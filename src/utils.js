@@ -52,18 +52,18 @@ export function wrapText(input, maxChars = 36, maxLines = 2) {
 }
 
 export const PALETTES = Object.freeze([
-  { id:'lilac', name:'Lilac', scene:'#D7CBFF', card:'#FFFFFF', accent:'#8064F4', secondary:'#EDE7FF' },
-  { id:'rose', name:'Rose', scene:'#FFC9DD', card:'#FFF9FC', accent:'#F266A2', secondary:'#FFE6EF' },
-  { id:'peach', name:'Peach', scene:'#FFC9BB', card:'#FFFAF7', accent:'#EA806C', secondary:'#FFE4D7' },
-  { id:'lemon', name:'Lemon', scene:'#FFE49A', card:'#FFFDF5', accent:'#E7A12B', secondary:'#FFF0C5' },
-  { id:'mint', name:'Mint', scene:'#ACE8D8', card:'#FFFFFF', accent:'#36A991', secondary:'#D7F7ED' },
-  { id:'sky', name:'Sky', scene:'#B4D7FF', card:'#FFFFFF', accent:'#5C92EE', secondary:'#E3F0FF' },
-  { id:'coral', name:'Coral', scene:'#FFADA5', card:'#FFF5F0', accent:'#EF665C', secondary:'#FFDDD3' },
-  { id:'night', name:'Night', scene:'#2B315F', card:'#323A70', accent:'#B2A1FF', secondary:'#474E87' }
+  {id:'eclipse',name:'Eclipse',scene:'#141428',card:'#202039',accent:'#997CFF',sceneId:'halo'},
+  {id:'phantom',name:'Phantom',scene:'#0A1C25',card:'#132F39',accent:'#4AE9DD',sceneId:'grid'},
+  {id:'drift',name:'Drift',scene:'#2E1A24',card:'#35242C',accent:'#FF9668',sceneId:'beam'},
+  {id:'nova',name:'Nova',scene:'#25143B',card:'#301D4F',accent:'#F075FF',sceneId:'shards'},
+  {id:'zenith',name:'Zenith',scene:'#113348',card:'#143D50',accent:'#FFE09B',sceneId:'orbit'},
+  {id:'frost',name:'Frost',scene:'#CADAE7',card:'#F2F6FA',accent:'#3976CE',sceneId:'haze'},
+  {id:'chrome',name:'Chrome',scene:'#D2D5DC',card:'#F5F6F8',accent:'#ED643E',sceneId:'grid'},
+  {id:'ember',name:'Ember',scene:'#290F1A',card:'#401F29',accent:'#FF526D',sceneId:'beam'}
 ]);
 export const SCENES = Object.freeze([
-  {id:'dream', name:'Dream'}, {id:'clouds',name:'Clouds'}, {id:'sunset',name:'Sunset'},
-  {id:'hills',name:'Hills'}, {id:'waves',name:'Waves'}, {id:'stars',name:'Stars'}
+  {id:'halo',name:'Halo'}, {id:'grid',name:'Grid'}, {id:'beam',name:'Beam'},
+  {id:'orbit',name:'Orbit'}, {id:'haze',name:'Haze'}, {id:'shards',name:'Shards'}
 ]);
 export const CHARACTERS = Object.freeze([
   {id:'noah',name:'Noah',type:'human'}, {id:'ivy',name:'Ivy',type:'human'},
@@ -77,15 +77,20 @@ export function createDefaultState() {
   return {
     name:'Denis',username:'deni',bio:'building things on the internet',
     tags:['builder','designer'],character:'noah',avatarMode:'character',
-    theme:'lilac',scene:'dream',sceneColor:'#D7CBFF',cardColor:'#FFFFFF',
-    accentColor:'#8064F4',format:'square'
+    theme:'eclipse',scene:'halo',sceneColor:'#141428',cardColor:'#202039',
+    accentColor:'#997CFF',format:'square'
   };
 }
 
 export function getSavedState(source) {
   const defaults = createDefaultState();
   if (!source || typeof source !== 'object') return defaults;
-  const theme = PALETTES.some(p=>p.id===source.theme) ? source.theme : defaults.theme;
+  const isCurrentTheme = PALETTES.some(p=>p.id===source.theme);
+  const isCustomTheme = source.theme === 'custom';
+  // v1 stored pastel palettes. Migrate those styles to the new aura defaults,
+  // while keeping names, tags, format, and intentionally selected custom colors.
+  const legacyTheme = !isCurrentTheme && !isCustomTheme;
+  const theme = isCurrentTheme || isCustomTheme ? source.theme : defaults.theme;
   const scene = SCENES.some(p=>p.id===source.scene) ? source.scene : defaults.scene;
   const character = CHARACTERS.some(p=>p.id===source.character) ? source.character : defaults.character;
   return {
@@ -95,16 +100,18 @@ export function getSavedState(source) {
     bio:sanitizeText(source.bio ?? defaults.bio,MAX.bio),
     tags:Array.isArray(source.tags)?source.tags.filter(x=>typeof x==='string').slice(0,MAX.tags).map(x=>sanitizeText(x,MAX.tag)):defaults.tags,
     character,theme,scene,
-    sceneColor:normalizeHex(source.sceneColor,defaults.sceneColor),
-    cardColor:normalizeHex(source.cardColor,defaults.cardColor),
-    accentColor:normalizeHex(source.accentColor,defaults.accentColor),
+    sceneColor:legacyTheme?defaults.sceneColor:normalizeHex(source.sceneColor,defaults.sceneColor),
+    cardColor:legacyTheme?defaults.cardColor:normalizeHex(source.cardColor,defaults.cardColor),
+    accentColor:legacyTheme?defaults.accentColor:normalizeHex(source.accentColor,defaults.accentColor),
     format:source.format==='wide'?'wide':'square',
     avatarMode:source.avatarMode==='upload'?'upload':'character'
   };
 }
 
 export function randomize(state, random = Math.random) {
-  const nextPalette = PALETTES[Math.floor(random()*PALETTES.length)];
+  let nextPalette = PALETTES[Math.floor(random()*PALETTES.length)];
+  // Avoid a no-op reroll even with a deterministic random source.
+  if (nextPalette.id === state.theme) nextPalette = PALETTES[(PALETTES.indexOf(nextPalette)+1)%PALETTES.length];
   const nextScene = SCENES[Math.floor(random()*SCENES.length)];
   const nextCharacter = CHARACTERS[Math.floor(random()*CHARACTERS.length)];
   return {

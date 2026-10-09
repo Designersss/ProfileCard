@@ -1,98 +1,98 @@
 import { contrastColor, escapeXML, FORMATS, normalizeHex, wrapText } from './utils.js';
 import { characterSVG } from './characters.js';
 
-function mix(a,b,ratio){
- const one=normalizeHex(a).slice(1), two=normalizeHex(b).slice(1);
- return '#' + [0,2,4].map(i=>Math.round(parseInt(one.slice(i,i+2),16)*(1-ratio)+parseInt(two.slice(i,i+2),16)*ratio).toString(16).padStart(2,'0')).join('');
+function mix(a, b, ratio) {
+  const x = normalizeHex(a).slice(1), y = normalizeHex(b).slice(1);
+  return '#' + [0, 2, 4].map(i => Math.round(parseInt(x.slice(i, i + 2), 16) * (1 - ratio) + parseInt(y.slice(i, i + 2), 16) * ratio).toString(16).padStart(2, '0')).join('');
 }
-
-function scenery(scene,sceneColor,accent,wide){
- const soft=mix(sceneColor,'#FFFFFF',.46);
- const light=mix(sceneColor,'#FFFFFF',.74);
- const dark=mix(sceneColor,accent,.26);
- const highlights=`<g fill="white" opacity=".85"><path d="M91 110v31m-15-16h31" stroke="white" stroke-width="8" stroke-linecap="round"/><path d="m606 139 6 17 18 6-18 6-6 18-7-18-17-6 17-6Z"/><circle cx="552" cy="256" r="5"/><circle cx="145" cy="272" r="4"/></g>`;
- const blob=`<path d="M0 124Q112-24 235 55T507 83Q617 18 720 120V0H0Z" fill="${light}" opacity=".43"/><path d="M-31 555Q97 433 217 520T470 516Q601 392 751 489V750H-31Z" fill="${dark}" opacity=".27"/>`;
- switch(scene){
- case 'clouds': return `${blob}<g fill="${light}" opacity=".72"><ellipse cx="124" cy="394" rx="158" ry="70"/><ellipse cx="261" cy="406" rx="148" ry="61"/><ellipse cx="617" cy="372" rx="170" ry="74"/><ellipse cx="482" cy="397" rx="111" ry="55"/></g>${highlights}`;
- case 'sunset': return `<circle cx="577" cy="190" r="112" fill="#FFF2C4" opacity=".72"/><path d="M0 489q119-153 255-8t265-49q88-97 200 20V720H0Z" fill="${light}" opacity=".55"/><path d="M0 561q119-85 250-13t239-26q129-75 231 14V720H0Z" fill="${dark}" opacity=".42"/>${highlights}`;
- case 'hills': return `<circle cx="540" cy="147" r="84" fill="#FFF7D9" opacity=".82"/><path d="M0 420q143-194 295-30t425-17v347H0Z" fill="${light}"/><path d="M0 540q183-170 353-22t367-22v224H0Z" fill="${mix(sceneColor,'#47A78F',.25)}" opacity=".7"/><path d="M0 621q151-105 343-13t377 0v112H0Z" fill="${dark}" opacity=".46"/>${highlights}`;
- case 'waves': return `<path d="M-20 0h760v140Q555 45 371 121T-20 118Z" fill="${light}" opacity=".8"/><path d="M-20 343Q134 246 309 325t431-4v180q-165 119-389 18T-20 548Z" fill="${soft}" opacity=".62"/><path d="M-20 552q180-150 364-24t396 4v188H-20Z" fill="${dark}" opacity=".42"/>${highlights}`;
- case 'stars': return `<circle cx="555" cy="148" r="100" fill="${mix(sceneColor,'#FFFFFF',.22)}" opacity=".6"/><path d="M0 540q140-100 280-40t440-35V720H0Z" fill="${dark}" opacity=".45"/><g fill="${light}"><circle cx="96" cy="93" r="4"/><circle cx="615" cy="323" r="6"/><circle cx="414" cy="63" r="4"/><circle cx="330" cy="206" r="3"/><path d="m128 237 9 22 22 9-22 9-9 22-9-22-22-9 22-9Z"/></g>${highlights}`;
- default: return `<path d="M0 0h720v245q-168-135-335-28T0 189Z" fill="${light}" opacity=".48"/><path d="M0 460q150-91 276-12t239-12q96-71 205 0v284H0Z" fill="${soft}" opacity=".67"/><path d="M-35 669q99-144 237-90t271-9q141-104 280 26v124H-35Z" fill="${dark}" opacity=".36"/><circle cx="583" cy="282" r="72" fill="${light}" opacity=".65"/>${highlights}`;
- }
+function txt(value, x, y, size, color, {weight = 500, width = 0, spacing = 0} = {}) {
+  const text = String(value);
+  // Width protection is vital for variable Unicode names and export parity.
+  const estimated = [...text].reduce((n, ch) => n + (/[^\u0000-\u00ff]/.test(ch) ? 1.05 : .61), 0) * size;
+  const fit = width && estimated > width ? ` textLength="${width}" lengthAdjust="spacingAndGlyphs"` : '';
+  return `<text x="${x}" y="${y}" font-family="Arial, Helvetica, sans-serif" font-size="${size}" font-weight="${weight}" letter-spacing="${spacing}" fill="${color}"${fit}>${escapeXML(text)}</text>`;
 }
-
-function textNode(value,x,y,size,color,{weight=400,anchor='start',maxAllowedWidth=0}={}){
- const estimated=Array.from(String(value)).reduce((sum,char)=>sum+(/[^\u0000-\u00ff]/.test(char)?1.05:.59),0)*size;
- const extra=maxAllowedWidth && estimated>maxAllowedWidth?` textLength="${maxAllowedWidth}" lengthAdjust="spacingAndGlyphs"`:'';
- return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" font-family="Arial, Helvetica, sans-serif" fill="${color}" text-anchor="${anchor}"${extra}>${escapeXML(value)}</text>`;
+function graphics(scene, base, accent) {
+  const glow = mix(base, accent, .47), mist = mix(base, '#FFFFFF', .17);
+  const grid = `<g stroke="${mix(base, '#FFFFFF', .6)}" stroke-opacity=".16" stroke-width="1">${Array.from({length:13}, (_, i) => `<path d="M${i*60} 0V720M0 ${i*60}H720"/>`).join('')}</g>`;
+  switch (scene) {
+    case 'grid': return `${grid}<circle cx="388" cy="255" r="235" fill="none" stroke="${accent}" stroke-opacity=".4" stroke-width="3"/><circle cx="388" cy="255" r="177" fill="${glow}" opacity=".4"/>`;
+    case 'halo': return `<circle cx="365" cy="260" r="240" fill="${glow}" opacity=".7"/><circle cx="365" cy="260" r="211" fill="none" stroke="${accent}" stroke-width="18" stroke-opacity=".56"/><circle cx="365" cy="260" r="275" fill="none" stroke="${accent}" stroke-width="2" stroke-opacity=".4"/>`;
+    case 'beam': return `<path d="M188-50H650L348 750H-115Z" fill="${accent}" opacity=".21"/><path d="M458-100H690L370 720H147Z" fill="${mist}" opacity=".23"/><path d="M520-80L232 740" stroke="${accent}" stroke-width="3" opacity=".6"/>`;
+    case 'haze': return `<ellipse cx="400" cy="350" rx="300" ry="250" fill="${glow}" opacity=".45"/><path d="M-40 350Q120 210 290 390T760 340" stroke="${accent}" stroke-width="90" stroke-opacity=".12" fill="none"/><path d="M-40 465Q180 305 350 475T760 470" stroke="${mist}" stroke-width="55" stroke-opacity=".32" fill="none"/>`;
+    case 'orbit': return `<g fill="none" stroke="${accent}" stroke-opacity=".56"><ellipse cx="364" cy="320" rx="302" ry="145" stroke-width="4" transform="rotate(-28 364 320)"/><ellipse cx="364" cy="320" rx="246" ry="222" stroke-width="2" transform="rotate(24 364 320)"/></g><circle cx="555" cy="113" r="24" fill="${accent}"/>`;
+    default: return `<path d="M-10 60 330-60 730 115 455 366 738 545 500 750 0 555 165 345Z" fill="${glow}" opacity=".53"/><path d="m-30 30 360 210-165 260 470 200" fill="none" stroke="${accent}" stroke-width="2.4" opacity=".52"/><path d="M490 0 260 720" stroke="${mist}" stroke-width="75" opacity=".21"/>`;
+  }
 }
-function svgTags(tags,accent,ink,x,y,{wide=false}={}) {
- let start=x;
- return tags.slice(0,3).map(tag=>{
-   const value=String(tag).slice(0,18);
-   const width=Math.min(wide?174:176,Math.max(83,value.length*(wide?12:11)+36));
-   const tagFill=mix(accent,'#FFFFFF',.78);
-   const tagInk=contrastColor(tagFill);
-   const out=`<rect x="${start}" y="${y}" width="${width}" height="${wide?45:37}" rx="${wide?23:19}" fill="${tagFill}"/>${textNode(value,start+width/2,y+(wide?29:25),wide?19:18,tagInk,{weight:600,anchor:'middle',maxAllowedWidth:width-22})}`;
-   start+=width+12;
-   return out;
- }).join('');
+function tagsSVG(tags, accent, ink, x, y, wide = false) {
+  const fontSize = wide ? 18 : 16, height = wide ? 36 : 32;
+  let cursor = x;
+  return tags.slice(0, 3).map(tag => {
+    const text = String(tag).slice(0, 18).toUpperCase();
+    const width = Math.min(wide ? 139 : 142, Math.max(78, text.length * (wide ? 10 : 9) + 26));
+    const content = `<rect x="${cursor}" y="${y}" width="${width}" height="${height}" rx="9" fill="${accent}" opacity=".17" stroke="${accent}" stroke-opacity=".7"/><text x="${cursor + width / 2}" y="${y + (wide ? 24 : 22)}" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" letter-spacing=".6" font-weight="700" fill="${ink}" text-anchor="middle" textLength="${Math.min(width-16, text.length * 10)}" lengthAdjust="spacingAndGlyphs">${escapeXML(text)}</text>`;
+    cursor += width + 9;
+    return content;
+  }).join('');
 }
-
-function photoSVG(data,x,y,w,h){
- if (!data?.startsWith('data:image/')) return '';
- return `<g><clipPath id="photoClip"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="55"/></clipPath><rect x="${x-4}" y="${y-4}" width="${w+8}" height="${h+8}" rx="59" fill="white" opacity=".65"/><image href="${escapeXML(data)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" clip-path="url(#photoClip)"/></g>`;
+function photoSVG(data, x, y, width, height) {
+  if (!data || !/^data:image\/(png|jpeg|webp);base64,/i.test(data)) return '';
+  return `<defs><clipPath id="pcPhotoClip"><rect x="${x}" y="${y}" width="${width}" height="${height}" rx="24"/></clipPath></defs><rect x="${x-5}" y="${y-5}" width="${width+10}" height="${height+10}" rx="28" fill="#FFFFFF" fill-opacity=".11" stroke="#FFFFFF" stroke-opacity=".3"/><image href="${escapeXML(data)}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" clip-path="url(#pcPhotoClip)"/>`;
 }
-
-export function renderCardSVG(state,{animated=true}={}) {
- const wide=state.format==='wide';
- const {width:w,height:h}=FORMATS[state.format] || FORMATS.square;
- const scene=normalizeHex(state.sceneColor,'#D7CBFF');
- const card=normalizeHex(state.cardColor,'#FFFFFF');
- const accent=normalizeHex(state.accentColor,'#8064F4');
- const ink=contrastColor(card);
- const muted=mix(ink,card,.42);
- const name=(state.name||'Your name').trim();
- const username=(state.username||'username').replace(/^@+/, '').trim();
- const bio=(state.bio||'Your little corner of the internet.').trim();
- const bioLines=wrapText(bio,wide?36:46,2);
- const nameSize=wide?Math.max(35,64-Math.max(0,name.length-12)*2):Math.max(32,56-Math.max(0,name.length-11)*1.75);
- const gradientId='pcSceneGradient';
- const art=state.avatarMode==='upload' && state.photo ? photoSVG(state.photo,wide?70:148,wide?130:85,wide?425:422,wide?400:380)
-   : `<g class="${animated?'float-person':''}">${characterSVG(state.character,{x:wide?60:135,y:wide?95:55,width:wide?500:455,height:wide?475:430})}</g>`;
- let cardContent;
- if (wide) {
-  const bx=635,by=80,bw=515,bh=478;
-  cardContent=`<g><rect x="${bx}" y="${by+9}" width="${bw}" height="${bh}" rx="42" fill="#322C70" opacity=".10"/><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="42" fill="${card}"/>
-   <circle cx="1068" cy="152" r="30" fill="${mix(accent,card,.75)}"/><path d="m1062 152 6 11 14-19" fill="none" stroke="${accent}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-   ${textNode(name,bx+45,207,nameSize,ink,{weight:800,maxAllowedWidth:wide?418:520})}
-   ${textNode('@'+username,bx+45,259,28,muted,{weight:600,maxAllowedWidth:417})}
-   ${bioLines.map((line,i)=>textNode(line,bx+45,322+i*36,27,muted,{maxAllowedWidth:415})).join('')}
-   ${svgTags(state.tags,accent,ink,bx+45,455,{wide:true})}
-   <path d="M${bx+45} 525h${bw-90}" stroke="${accent}" stroke-opacity=".28" stroke-width="3" stroke-linecap="round"/>
-   ${textNode('YOUR INTERNET SELF',bx+45,543,15,muted,{weight:700})}
-   </g>`;
- } else {
-  const bx=30,by=457,bw=660,bh=234;
-  cardContent=`<g><rect x="${bx}" y="${by+9}" width="${bw}" height="${bh}" rx="40" fill="#322C70" opacity=".12"/><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="40" fill="${card}"/>
-   ${textNode(name,69,526,nameSize,ink,{weight:800,maxAllowedWidth:wide?418:520})}
-   ${textNode('@'+username,71,564,24,muted,{weight:600,maxAllowedWidth:535})}
-   ${bioLines.map((line,i)=>textNode(line,71,603+i*29,22,muted,{maxAllowedWidth:527})).join('')}
-   ${svgTags(state.tags,accent,ink,70,637)}
-   <circle cx="627" cy="526" r="20" fill="${mix(accent,card,.77)}"/>
-   <path d="m627 512 5 11 12 2-9 9 2 13-11-6-11 6 2-13-9-9 12-2Z" transform="translate(0,-4) scale(.98)" fill="${accent}"/>
-   </g>`;
- }
- const sceneArtwork=`<g transform="scale(${(w/720).toFixed(5)} ${(h/720).toFixed(5)})">${scenery(state.scene,scene,accent,wide)}</g>`;
- const pill=wide?`<g><rect x="69" y="57" width="225" height="48" rx="24" fill="#FFFFFF" opacity=".9"/><circle cx="93" cy="81" r="7" fill="#3EBF9D"/>${textNode('ON THE INTERNET',111,87,18,'#343858',{weight:700})}</g>`:`<g><rect x="451" y="40" width="228" height="49" rx="25" fill="#FFFFFF" opacity=".9"/><circle cx="478" cy="64" r="7" fill="#3EBF9D"/>${textNode('ON THE INTERNET',496,70,17,'#343858',{weight:700})}</g>`;
- return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="ProfileCard for ${escapeXML(name)}" data-format="${state.format}">
-  <defs><linearGradient id="${gradientId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${mix(scene,'#FFFFFF',.25)}"/><stop offset=".55" stop-color="${scene}"/><stop offset="1" stop-color="${mix(scene,accent,.21)}"/></linearGradient></defs>
-  <rect width="${w}" height="${h}" fill="url(#${gradientId})"/>
-  ${sceneArtwork}
-  <g class="${animated?'float-decor':''}" fill="${mix(accent,'#FFFFFF',.34)}" opacity=".75"><path d="m${wide?490:578} ${wide?80:126} 10 23 23 10-23 10-10 23-10-23-23-10 23-10Z"/></g>
-  ${art}
-  ${cardContent}
-  ${pill}
- </svg>`;
+export function renderCardSVG(state, {animated = true} = {}) {
+  const wide = state.format === 'wide';
+  const {width:w, height:h} = FORMATS[state.format] || FORMATS.square;
+  const base = normalizeHex(state.sceneColor, '#111629');
+  const panel = normalizeHex(state.cardColor, '#19223C');
+  const accent = normalizeHex(state.accentColor, '#A18BFF');
+  const ink = contrastColor(panel);
+  const muted = mix(ink, panel, .35);
+  const name = (state.name || 'YOUR NAME').trim();
+  const username = (state.username || 'username').replace(/^@+/, '').trim();
+  const bio = (state.bio || 'BUILDING ON THE INTERNET').trim();
+  const bioLines = wrapText(bio, wide ? 28 : 42, 2);
+  const scene = graphics(state.scene, base, accent);
+  const frame = wide ? `M26 26H1174V604H26Z` : `M22 22H698V698H22Z`;
+  const glyphs = `<g stroke="${accent}" stroke-width="3" fill="none" opacity=".85"><path d="M42 ${wide?145:144}h50m-25-25v50M${w-108} ${wide?495:415}h56m-28-28v56"/><circle cx="${w-60}" cy="60" r="12"/><path d="M${w-72} 60h24"/></g>`;
+  const charX = wide ? 53 : 115, charY = wide ? 103 : 57, charW = wide ? 500 : 490, charH = wide ? 473 : 440;
+  const art = state.avatarMode === 'upload' && state.photo
+    ? photoSVG(state.photo, wide?108:154, wide?142:106, wide?384:412, wide?358:340)
+    : `<g class="${animated?'aura-character':''}">${characterSVG(state.character, {x:charX,y:charY,width:charW,height:charH})}</g>`;
+  const aurora = wide ? `<ellipse cx="306" cy="304" rx="218" ry="220" fill="url(#pcAura)" opacity=".83"/>` : `<ellipse cx="358" cy="259" rx="226" ry="222" fill="url(#pcAura)" opacity=".8"/>`;
+  let info;
+  if (wide) {
+    const x=627,y=74,pw=526,ph=484;
+    info = `<g><rect x="${x}" y="${y}" width="${pw}" height="${ph}" rx="24" fill="${panel}" stroke="${mix(panel,ink,.22)}" stroke-width="1.5"/>
+      <rect x="${x+25}" y="${y+30}" width="37" height="5" rx="2.5" fill="${accent}"/>
+      ${txt('DIGITAL IDENTITY  /  001',x+77,y+38,15,muted,{weight:700,spacing:1.3})}
+      ${txt(name.toUpperCase(),x+32,y+163,Math.max(38,64-Math.max(0,name.length-12)*2),ink,{weight:900,width:pw-65,spacing:-1.5})}
+      ${txt('@'+username,x+34,y+207,25,accent,{weight:700,width:pw-72})}
+      <path d="M${x+32} ${y+248}h${pw-64}" stroke="${accent}" stroke-opacity=".42"/>
+      ${bioLines.map((line,i)=>txt(line,x+34,y+290+i*35,25,muted,{width:pw-68})).join('')}
+      ${tagsSVG(state.tags,accent,ink,x+33,y+385,true)}
+      ${txt('AURA / ONLINE',x+34,y+456,14,accent,{weight:800,spacing:2})}
+      <path d="M${x+pw-64} ${y+446}h30" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>
+    </g>`;
+  } else {
+    const x=30,y=456,pw=660,ph=232;
+    info = `<g><rect x="${x}" y="${y}" width="${pw}" height="${ph}" rx="22" fill="${panel}" stroke="${mix(panel,ink,.25)}" stroke-width="1.4"/>
+       <rect x="${x+23}" y="${y+27}" width="30" height="4" rx="2" fill="${accent}"/>
+       ${txt('IDENTITY / 001',x+65,y+33,13,muted,{weight:800,spacing:1.5})}
+       ${txt(name.toUpperCase(),x+32,y+102,Math.max(34,54-Math.max(0,name.length-13)*1.7),ink,{weight:900,width:pw-65,spacing:-1.3})}
+       ${txt('@'+username,x+34,y+134,22,accent,{weight:700,width:pw-70})}
+       ${bioLines.map((line,i)=>txt(line,x+34,y+164+i*24,20,muted,{width:pw-70})).join('')}
+       ${tagsSVG(state.tags,accent,ink,x+33,y+194)}
+    </g>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="ProfileCard for ${escapeXML(name)}" data-format="${state.format}">
+    <defs><linearGradient id="pcBackground" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${mix(base,accent,.13)}"/><stop offset="1" stop-color="${mix(base,'#000000',.24)}"/></linearGradient><radialGradient id="pcAura"><stop offset="0" stop-color="${accent}" stop-opacity=".7"/><stop offset=".48" stop-color="${accent}" stop-opacity=".26"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs>
+    <rect width="${w}" height="${h}" fill="url(#pcBackground)"/>
+    <g transform="scale(${w/720} ${h/720})">${scene}</g>
+    <path d="${frame}" fill="none" stroke="${mix(base,'#FFFFFF',.65)}" stroke-opacity=".25" stroke-width="1.5"/>
+    <g class="${animated?'aura-glow':''}">${aurora}</g>
+    <g class="${animated?'aura-lines':''}">${glyphs}</g>
+    ${art}
+    ${info}
+    ${wide ? txt('PROFILECARD  //  V1.1',46,593,14,contrastColor(base),{weight:700,spacing:1.7}) : txt('PROFILECARD  /  V1.1',45,42,13,contrastColor(base),{weight:800,spacing:1.5})}
+  </svg>`;
 }

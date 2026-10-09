@@ -3,13 +3,14 @@ import { characterArtwork } from './characters.js';
 import { renderCardSVG } from './card.js';
 
 const $ = (id) => document.getElementById(id);
-const storageKey = 'profilecard.settings.v1';
+const storageKey = 'profilecard.settings.v1'; // Preserve existing profiles across the visual redesign.
 let initialSettings;
 try { initialSettings=JSON.parse(localStorage.getItem(storageKey)||'null'); } catch { initialSettings=null; }
 const state = getSavedState(initialSettings);
 let deferredInstallPrompt = null;
 let toastTimeout;
 let animationTimeout;
+let activeTab = 'identity';
 
 function save() {
   const {photo, ...settings} = state;
@@ -58,10 +59,12 @@ function drawCharacters() {
 }
 
 function drawPalettes(){
+  $('paletteLabel').textContent=PALETTES.find(p=>p.id===state.theme)?.name || 'Custom';
   $('paletteList').innerHTML=PALETTES.map(p=>`<button type="button" data-palette="${p.id}" class="palette-choice ${state.theme===p.id?'active':''}" title="${p.name}" aria-label="${p.name} theme" aria-pressed="${state.theme===p.id}" style="--swatch:${p.scene}"></button>`).join('');
   $('paletteList').querySelectorAll('[data-palette]').forEach(b=>b.addEventListener('click',()=>selectTheme(b.dataset.palette)));
 }
 function drawScenes(){
+  $('sceneLabel').textContent=SCENES.find(s=>s.id===state.scene)?.name || 'Scene';
   $('sceneList').innerHTML=SCENES.map(s=>`<button type="button" class="scene-choice ${state.scene===s.id?'active':''}" data-scene="${s.id}" aria-label="${s.name} background" aria-pressed="${state.scene===s.id}" title="${s.name}"></button>`).join('');
   $('sceneList').querySelectorAll('[data-scene]').forEach(b=>b.addEventListener('click',()=>{
     state.scene=b.dataset.scene;drawScenes();refreshCard({magical:true});
@@ -198,7 +201,35 @@ function installFlow(){
   window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;toast('ProfileCard lives on your device now!');});
 }
 
+function activateTab(tab, {focus=false}={}) {
+  if(!['identity','character','aura'].includes(tab))return;
+  activeTab=tab;
+  for(const button of document.querySelectorAll('[data-tab]')){
+    const isActive=button.dataset.tab===tab;
+    button.classList.toggle('active',isActive);
+    button.setAttribute('aria-selected',String(isActive));
+    button.tabIndex=isActive?0:-1;
+    if(isActive&&focus)button.focus();
+  }
+  for(const panel of document.querySelectorAll('[data-panel]')){
+    panel.hidden=panel.dataset.panel!==tab;
+  }
+  $('editorForm').scrollTop=0;
+}
+
 function events(){
+  const tabs=[...document.querySelectorAll('[data-tab]')];
+  for(const tab of tabs){
+    tab.addEventListener('click',()=>activateTab(tab.dataset.tab));
+    tab.addEventListener('keydown',event=>{
+      const index=tabs.indexOf(tab);
+      const direction=event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:0;
+      if(!direction && event.key!=='Home' && event.key!=='End')return;
+      event.preventDefault();
+      const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+direction+tabs.length)%tabs.length;
+      activateTab(tabs[next].dataset.tab,{focus:true});
+    });
+  }
   $('editorForm').addEventListener('submit',e=>e.preventDefault());
   $('nameInput').addEventListener('input',e=>{state.name=sanitizeText(e.target.value,MAX.name);refreshCard();});
   $('usernameInput').addEventListener('input',e=>{state.username=sanitizeText(e.target.value.replace(/^@+/,''),MAX.username-1);refreshCard();});
@@ -230,7 +261,7 @@ function events(){
 }
 
 async function init(){
-  refreshControls();events();refreshCard();
+  refreshControls();events();activateTab(activeTab);refreshCard();
   try { const photo=await dbAvatar(); if(typeof photo==='string'&&photo.startsWith('data:image/')){state.photo=photo;refreshCard();} } catch { /* Settings work without IndexedDB. */ }
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{}),{once:true});
