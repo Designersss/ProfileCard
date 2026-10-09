@@ -53,7 +53,7 @@ Deploy the repository root to any **HTTPS static host** (Cloudflare Pages, Netli
 
 When shipping a new version, increment the `CACHE` value in `sw.js` to replace pre-cached assets. Service worker installation does not force-refresh an editor with unsaved work. Chrome's install UI is not available in every browser; the in-app button offers an alternative instruction dialog.
 
-## Character builder and GIF release v1.2
+## Character builder and GIF release v1.3
 
 - Replaces the fixed gallery of characters with a single modular, user-built persona. Older settings are safely mapped to the builder options.
 - Constant character blink/breathing motion, glow and ambient background movement. `prefers-reduced-motion` disables ambient preview animations without disabling export.
@@ -79,3 +79,10 @@ For this tiny static tool, the implementation intentionally uses standards-based
 ## License
 
 MIT for source code and original illustrations in this repository.
+
+### Visual editor v1.3
+- Dark graphite studio with purple accents; no header install prompt or subtitle (PWA manifest and offline support remain).
+- Character categories use actual SVG thumbnails for every style choice (face, hair, eyes, brows, lips, clothing, accessories).
+- Face fullness is a live 75–125% range slider applied to the face geometry and saved with the profile.
+- Skin, iris, hair and clothing colors are shown as selectable color swatches.
+- All selections update the same avatar shared by the animated preview, PNG renderer and GIF frame renderer.

@@ -1,15 +1,16 @@
-import { CHARACTER_OPTIONS, FORMATS, MAX, PALETTES, SCENES, createDefaultState, escapeXML, getSavedState, randomize, randomizeCharacter, sanitizeText } from './utils.js';
+import { CHARACTER_OPTIONS, FACE_WIDTH, FORMATS, MAX, PALETTES, SCENES, createDefaultState, escapeXML, getSavedState, randomize, randomizeCharacter, sanitizeText } from './utils.js';
 import { renderCardSVG } from './card.js';
+import { characterArtwork } from './characters.js';
 
 const $ = (id) => document.getElementById(id);
 const storageKey = 'profilecard.settings.v1'; // Preserve existing profiles across the visual redesign.
 let initialSettings;
 try { initialSettings=JSON.parse(localStorage.getItem(storageKey)||'null'); } catch { initialSettings=null; }
 const state = getSavedState(initialSettings);
-let deferredInstallPrompt = null;
 let toastTimeout;
 let animationTimeout;
 let activeTab = 'identity';
+let activeCharacterCategory = 'face';
 let gifAbort = null;
 
 function save() {
@@ -48,22 +49,63 @@ function selectTheme(id) {
 }
 
 const avatarLabels={
- face:'Face shape',skin:'Skin tone',hair:'Hairstyle',hairColor:'Hair color',eyes:'Eyes',eyeColor:'Eye color',
+ face:'Face shape',skin:'Skin tone',hair:'Hair style',hairColor:'Hair color',eyes:'Eye shape',eyeColor:'Eye color',
  brows:'Eyebrows',mouth:'Mouth / lips',outfit:'Outfit',outfitColor:'Outfit color',accessory:'Accessories'
 };
+const characterCategories=[
+ {id:'face',label:'Face',symbol:'◉'},
+ {id:'hair',label:'Hair',symbol:'◒'},
+ {id:'eyes',label:'Eyes',symbol:'◡'},
+ {id:'mouth',label:'Mouth',symbol:'⌣'},
+ {id:'outfit',label:'Outfit',symbol:'◈'},
+ {id:'extras',label:'Extras',symbol:'✦'}
+];
 const avatarColorFields=new Set(['skin','hairColor','eyeColor','outfitColor']);
 const humanize=(value)=>value.split('-').map(x=>x[0].toUpperCase()+x.slice(1)).join(' ');
+const focusViews={face:'98 77 204 248',hair:'93 45 215 220',eyes:'112 149 176 99',brows:'112 128 176 84',mouth:'131 221 139 94',outfit:'39 256 323 126',accessory:'92 56 216 280'};
+function avatarChoicePreview(field,value){
+ const profile={...state.avatar,[field]:value};
+ return `<svg viewBox="${focusViews[field]}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">${characterArtwork(profile,{animated:false,time:0})}</svg>`;
+}
+function choiceCards(field){
+ const options=CHARACTER_OPTIONS[field];
+ return `<div class="builder-group"><div class="section-title"><span>${avatarLabels[field]}</span><span class="section-hint">${options.length} styles</span></div>
+ <div class="avatar-option-grid" role="group" aria-label="${avatarLabels[field]}">${options.map(value=>`<button type="button" class="avatar-option ${state.avatar[field]===value?'active':''}" data-avatar-field="${field}" data-avatar-value="${value}" aria-label="${avatarLabels[field]}: ${humanize(value)}" aria-pressed="${state.avatar[field]===value}" title="${humanize(value)}"><span class="avatar-option-art">${avatarChoicePreview(field,value)}</span><span class="avatar-option-name">${humanize(value)}</span></button>`).join('')}</div></div>`;
+}
+function colorChoices(field){
+ const options=CHARACTER_OPTIONS[field];
+ return `<div class="builder-group"><div class="section-title"><span>${avatarLabels[field]}</span><span class="section-hint">Choose a shade</span></div><div class="builder-swatches" role="group" aria-label="${avatarLabels[field]}">${options.map((value,i)=>`<button type="button" class="avatar-swatch ${state.avatar[field]===value?'active':''}" data-avatar-field="${field}" data-avatar-value="${value}" style="--swatch:${value}" aria-label="${avatarLabels[field]} option ${i+1}: ${value}" aria-pressed="${state.avatar[field]===value}" title="${value}"></button>`).join('')}</div></div>`;
+}
+function faceSlider(){
+ return `<div class="builder-group"><div class="section-title"><label for="faceWidthInput">Face fullness</label><output id="faceWidthValue" for="faceWidthInput">${state.avatar.faceWidth}%</output></div>
+ <input id="faceWidthInput" class="builder-slider" type="range" min="${FACE_WIDTH.min}" max="${FACE_WIDTH.max}" step="${FACE_WIDTH.step}" value="${state.avatar.faceWidth}" aria-label="Face fullness" aria-valuetext="${state.avatar.faceWidth} percent" />
+ <div class="slider-labels"><span>Slender</span><span>Fuller</span></div></div>`;
+}
 function drawBuilder(){
  const parent=$('characterBuilder');
- parent.innerHTML=`<div class="builder-grid">${Object.entries(CHARACTER_OPTIONS).filter(([key])=>!avatarColorFields.has(key)).map(([key,options])=>
-  `<label class="builder-field"><span>${avatarLabels[key]}</span><select data-avatar-field="${key}">${options.map(value=>`<option value="${value}" ${state.avatar[key]===value?'selected':''}>${humanize(value)}</option>`).join('')}</select></label>`).join('')}</div>
- <div class="builder-colors">${[...avatarColorFields].map(key=>`<div class="builder-color"><span class="field-label">${avatarLabels[key]}</span><div class="builder-swatches" role="group" aria-label="${avatarLabels[key]}">${CHARACTER_OPTIONS[key].map(value=>`<button class="avatar-swatch ${state.avatar[key]===value?'active':''}" type="button" data-avatar-field="${key}" data-avatar-value="${value}" style="--swatch:${value}" aria-label="${avatarLabels[key]} ${value}" aria-pressed="${state.avatar[key]===value}" title="${value}"></button>`).join('')}</div></div>`).join('')}</div>`;
- parent.querySelectorAll('select[data-avatar-field]').forEach(select=>select.addEventListener('change',()=>{
-   state.avatar[select.dataset.avatarField]=select.value;refreshCard({magical:true});
+ const content={
+  face:()=>`${faceSlider()}${choiceCards('face')}${colorChoices('skin')}`,
+  hair:()=>`${choiceCards('hair')}${colorChoices('hairColor')}`,
+  eyes:()=>`${choiceCards('eyes')}${choiceCards('brows')}${colorChoices('eyeColor')}`,
+  mouth:()=>choiceCards('mouth'),
+  outfit:()=>`${choiceCards('outfit')}${colorChoices('outfitColor')}`,
+  extras:()=>choiceCards('accessory')
+ };
+ parent.innerHTML=`<nav class="avatar-categories" aria-label="Character feature categories">${characterCategories.map(cat=>`<button type="button" class="avatar-category ${cat.id===activeCharacterCategory?'active':''}" data-avatar-category="${cat.id}" aria-pressed="${cat.id===activeCharacterCategory}"><span class="avatar-category-icon" aria-hidden="true">${cat.symbol}</span><span>${cat.label}</span></button>`).join('')}</nav><div class="avatar-category-content">${content[activeCharacterCategory]()}</div>`;
+ parent.querySelectorAll('[data-avatar-category]').forEach(button=>button.addEventListener('click',()=>{
+  if(activeCharacterCategory===button.dataset.avatarCategory)return;
+  activeCharacterCategory=button.dataset.avatarCategory;drawBuilder();
  }));
- parent.querySelectorAll('button[data-avatar-field]').forEach(button=>button.addEventListener('click',()=>{
-   state.avatar[button.dataset.avatarField]=button.dataset.avatarValue;drawBuilder();refreshCard({magical:true});
+ parent.querySelectorAll('[data-avatar-value]').forEach(button=>button.addEventListener('click',()=>{
+   state.avatar[button.dataset.avatarField]=button.dataset.avatarValue;drawBuilder();refreshCard();
  }));
+ const slider=parent.querySelector('#faceWidthInput');
+ if(slider)slider.addEventListener('input',()=>{
+   state.avatar.faceWidth=Number(slider.value);
+   parent.querySelector('#faceWidthValue').textContent=`${state.avatar.faceWidth}%`;
+   slider.setAttribute('aria-valuetext',`${state.avatar.faceWidth} percent`);
+   refreshCard();
+ });
 }
 
 function drawPalettes(){
@@ -249,22 +291,6 @@ async function exportGif(){
  finally{worker?.terminate();gifAbort=null;button.disabled=false;progress.hidden=true;}
 }
 
-function installFlow(){
-  $('installBtn').addEventListener('click',async()=>{
-    if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone){toast('ProfileCard is already installed.');return;}
-    if(deferredInstallPrompt){
-      const event=deferredInstallPrompt;deferredInstallPrompt=null;
-      try{await event.prompt();await event.userChoice;}catch{toast('Installation isn’t available right now.');}
-      return;
-    }
-    const isIOS=/iP(hone|od|ad)/.test(navigator.userAgent);
-    $('installInstructions').textContent=isIOS?'In Safari, tap the Share icon, then choose “Add to Home Screen”.':'Open your browser menu and select “Install app” or “Add to Home Screen”. Availability depends on your browser.';
-    $('installDialog').showModal();
-  });
-  $('dismissInstall').addEventListener('click',()=>$('installDialog').close());
-  window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;});
-  window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;toast('ProfileCard lives on your device now!');});
-}
 
 function activateTab(tab, {focus=false}={}) {
   if(!['identity','character','aura'].includes(tab))return;
@@ -325,7 +351,6 @@ function events(){
   $('downloadGifBtn').addEventListener('click',exportGif);
   $('cancelGifBtn').addEventListener('click',()=>gifAbort?.abort());
   $('copyBtn').addEventListener('click',()=>exportImage(true));
-  installFlow();
 }
 
 async function init(){

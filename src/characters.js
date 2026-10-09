@@ -79,16 +79,20 @@ export function characterArtwork(avatar, {time=0, animated=true}={}){
  const blink=animated?false:((time%3.2)>2.36&&(time%3.2)<2.49);
  const skinShadow=shade(p.skin,-22);
  const motion=animated?0:Math.sin(time*Math.PI*2/3.2)*3;
+ const faceScale=(p.faceWidth/100).toFixed(3);
  return `<g transform="translate(0 ${motion.toFixed(2)})">
  <ellipse cx="201" cy="376" rx="131" ry="12" opacity=".1" fill="#090917"/>
  ${backHair(p)}
  ${outfit(p)}
  <path d="M181 281v34q20 15 38 0v-34" fill="${skinShadow}"/>
+ <g transform="translate(200 0) scale(${faceScale} 1) translate(-200 0)">
  <ellipse cx="122" cy="208" rx="15" ry="26" fill="${p.skin}"/><ellipse cx="279" cy="208" rx="15" ry="26" fill="${p.skin}"/>
  <path d="${facePath(p.face)}" fill="${p.skin}" stroke="${shade(p.skin,-12)}" stroke-width="2"/>
  <path d="M141 241q12 8 25 0m69 0q14 8 26-1" stroke="${shade(p.skin,-12)}" opacity=".25" stroke-width="8" fill="none" stroke-linecap="round"/>
  <path d="M201 216l-6 17q5 6 11 0" stroke="${skinShadow}" stroke-width="3" fill="none" stroke-linecap="round"/>
- ${brows(p)}${eyeSVG(p,blink)}${mouth(p)}${frontHair(p)}${accessory(p)}
+ ${brows(p)}${eyeSVG(p,blink)}${mouth(p)}
+ </g>
+ ${frontHair(p)}${accessory(p)}
  </g>`;
 }
 export function characterSVG(avatar, {x=0,y=0,width=400,height=380,time=0,animated=true}={}){
