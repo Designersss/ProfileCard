@@ -1,5 +1,4 @@
 import { contrastColor, escapeXML, FORMATS, normalizeHex, wrapText } from './utils.js';
-import { characterSVG } from './characters.js';
 
 function mix(a, b, ratio) {
   const x = normalizeHex(a).slice(1), y = normalizeHex(b).slice(1);
@@ -36,7 +35,7 @@ function tagsSVG(tags, accent, ink, x, y, wide = false) {
   }).join('');
 }
 function photoSVG(data, x, y, width, height) {
-  if (!data || !/^data:image\/(png|jpeg|webp);base64,/i.test(data)) return '';
+  if (!data || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/i.test(data)) return '';
   return `<defs><clipPath id="pcPhotoClip"><rect x="${x}" y="${y}" width="${width}" height="${height}" rx="24"/></clipPath></defs><rect x="${x-5}" y="${y-5}" width="${width+10}" height="${height+10}" rx="28" fill="#FFFFFF" fill-opacity=".11" stroke="#FFFFFF" stroke-opacity=".3"/><image href="${escapeXML(data)}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" clip-path="url(#pcPhotoClip)"/>`;
 }
 export function renderCardSVG(state, {animated = true, time = 0} = {}) {
@@ -55,10 +54,11 @@ export function renderCardSVG(state, {animated = true, time = 0} = {}) {
   const scene = graphics(state.scene, base, accent);
   const frame = wide ? `M26 26H1174V604H26Z` : `M22 22H698V698H22Z`;
   const glyphs = `<g stroke="${accent}" stroke-width="3" fill="none" opacity=".85"><path d="M42 ${wide?145:144}h50m-25-25v50M${w-108} ${wide?495:415}h56m-28-28v56"/><circle cx="${w-60}" cy="60" r="12"/><path d="M${w-72} 60h24"/></g>`;
-  const charX = wide ? 53 : 115, charY = wide ? 103 : 57, charW = wide ? 500 : 490, charH = wide ? 473 : 440;
-  const art = state.avatarMode === 'upload' && state.photo
-    ? photoSVG(state.photo, wide?108:154, wide?142:106, wide?384:412, wide?358:340)
-    : `<g class="${animated?'aura-character':''}">${characterSVG(state.avatar, {x:charX,y:charY,width:charW,height:charH,animated,time})}</g>`;
+  const photoX=wide?108:154,photoY=wide?142:106,photoW=wide?384:412,photoH=wide?358:340;
+  // No preset character: only an uploaded photograph or a neutral empty-photo affordance.
+  const placeholder=`<g opacity=".9"><rect x="${photoX}" y="${photoY}" width="${photoW}" height="${photoH}" rx="24" fill="${mix(base,accent,.12)}" stroke="${accent}" stroke-opacity=".6" stroke-width="2.5" stroke-dasharray="12 12"/><g transform="translate(${photoX+photoW/2} ${photoY+photoH/2-17})" stroke="${mix(accent,'#FFFFFF',.3)}" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><rect x="-43" y="-33" width="86" height="67" rx="10"/><circle cx="-17" cy="-10" r="6"/><path d="m-36 26 23-23 19 19 13-13 18 18"/></g>${txt('ADD YOUR PHOTO',photoX+photoW/2,photoY+photoH/2+92,19,mix(accent,'#FFFFFF',.35),{weight:800,spacing:2,width:photoW-32}).replace('<text ', '<text text-anchor="middle" ')}</g>`;
+  const photoArt=photoSVG(state.photo,photoX,photoY,photoW,photoH);
+  const art=`<g class="${animated?'aura-photo':''}" transform="translate(0 ${(Math.sin(phase)*5).toFixed(2)})">${photoArt||placeholder}</g>`;
   const aurora = wide ? `<ellipse cx="306" cy="304" rx="218" ry="220" fill="url(#pcAura)" opacity=".83"/>` : `<ellipse cx="358" cy="259" rx="226" ry="222" fill="url(#pcAura)" opacity=".8"/>`;
   let info;
   if (wide) {
@@ -94,6 +94,6 @@ export function renderCardSVG(state, {animated = true, time = 0} = {}) {
     <g transform="translate(${(Math.cos(phase)*4).toFixed(2)} ${(Math.sin(phase)*4).toFixed(2)})" class="${animated?'aura-lines':''}">${glyphs}</g>
     ${art}
     ${info}
-    ${wide ? txt('PROFILECARD  //  V1.3',46,593,14,contrastColor(base),{weight:700,spacing:1.7}) : txt('PROFILECARD  /  V1.3',45,42,13,contrastColor(base),{weight:800,spacing:1.5})}
+    ${wide ? txt('PROFILECARD  //  V1.4',46,593,14,contrastColor(base),{weight:700,spacing:1.7}) : txt('PROFILECARD  /  V1.4',45,42,13,contrastColor(base),{weight:800,spacing:1.5})}
   </svg>`;
 }

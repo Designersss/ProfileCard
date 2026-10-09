@@ -1,88 +1,49 @@
 # profilecard.
 
-**Make your own aura.** A free, full-viewport identity card studio with a custom modular vector character, six graphic aura scenes, Reroll Aura, PNG export, local-first settings and offline-capable PWA installation.
+**Make your own aura.** A free, full-screen, photo-first identity card editor. Add your own picture, edit profile text, choose a cinematic palette, reroll the background and export an image or looping GIF. No generated characters, accounts, watermark or backend.
 
 ## Run
 
-Requires **Node.js 20+**. No npm dependencies, accounts, API keys or backend.
+Requires Node.js 20+ and no third-party npm dependencies:
 
 ```sh
 npm run dev
 ```
 
-Open `http://localhost:4173`. Test with `npm run check`.
+Visit `http://localhost:4173`. Run `npm run check` for unit tests and project validation.
 
 ## Features
 
-- Full-viewport desktop/mobile studio with Identity / Character / Aura tabs; the document never scrolls (on small screens only the control tab content may scroll)
-- 7 a custom modular vector character or an uploaded photo (never sent to a server)
-- 8 aura palettes (Eclipse, Phantom, Drift, Nova, Zenith, Frost, Chrome, Ember), 6 geometric aura scenes and custom scene/panel/accent colors
-- Name, @handle, description and up to 3 tags
-- Independent Random character and Reroll Aura actions, with identity fields, uploaded photos and existing avatar unaffected by aura-only rerolls
-- Square 1080×1080 and wide 1200×630 PNG; 3.2-second looping GIF (420×420 or 600×315 at 10 fps) and Copy Image where supported
-- Installable PWA, offline shell, local preferences, IndexedDB photo persistence
-- Accessible forms, reduced-motion support and keyboard navigability
+- Dark full-screen editor with **Identity / Photo / Aura** tabs; internal panel scrolling on smaller screens only.
+- Upload or replace a **JPEG, PNG or WebP photograph** (max 4 MB); resize locally and persist in IndexedDB. Remove photo from card and local database with one action. The empty state is a neutral photo placeholder.
+- Name, username, bio, three tags; square and landscape outputs.
+- Eight curated palettes, six geometric scenes, independent scene/info/accent colors.
+- Reroll Aura only changes styling — never your photo or profile text.
+- Continually animated light, scene, and gently floating photograph in preview; downloadable static PNG and 3.2-second GIF loop at 10fps. GIF encoding runs in an offline Web Worker, with cancel/progress.
+- Offline-capable installable PWA. No analytics, cloud storage or third-party runtime resources.
 
-## Architecture
+## Project structure
 
-```text
-index.html               Semantic editor layout
-styles.css               Design system, responsive UI, motion
-src/utils.js             Validation, colors, randomizer, presets
-src/characters.js        Modular, customizable character artwork
-src/card.js              Shared SVG preview and export renderer
-src/app.js               Browser interactions, storage, PWA, PNG and animated GIF export
-src/gif.js               Offline animated GIF89a encoder (RGB332 palette, LZW)
-src/gif-worker.js        Asynchronous GIF compression worker
-sw.js                    Offline-first service worker
-manifest.webmanifest     PWA manifest
-assets/                  Original application icons
-scripts/serve.mjs        Dependency-free dev server
-scripts/verify.mjs       Project static checks
-tests/                   Node unit tests
-.github/workflows/       GitHub CI
-```
+- `index.html`, `styles.css` — responsive studio
+- `src/app.js` — controls, image storage, export, PWA registration
+- `src/card.js` — shared SVG scene rendering (photo and no-photo state)
+- `src/utils.js` — pure state, validation and theme utilities
+- `src/gif.js`, `src/gif-worker.js` — on-device GIF encoder and worker
+- `sw.js`, `manifest.webmanifest`, `assets/` — offline shell and PWA resources
+- `tests/`, `scripts/`, `.github/workflows/` — verification and CI
 
-No remote fonts, analytics, requests to third-party services, paid API calls or generated AI assets at runtime. The same SVG scene renderer is used both for the live preview and PNG export, keeping compositions consistent. PNG captures the static pose; exported GIF frames sample the same SVG composition on a deterministic animation timeline. GIF has a 256-color palette, so some banding may appear on gradients.
+The same SVG is used for preview and PNG/GIF rendering, with deterministic time-based GIF frames. GIF uses a limited palette so gradients can show banding. GIF sizes are capped at 420×420 (square) or 600×315 (wide) to protect device performance; PNG remains full-resolution.
 
-## Deployment
+## Data & migration
 
-Deploy the repository root to any **HTTPS static host** (Cloudflare Pages, Netlify, GitHub Pages etc.). All asset URLs, manifest references, and service worker scope are relative and support deploying to subpaths such as `/ProfileCard/`. For GitHub Pages, publish the root of `main` (or configure GitHub Actions deployment). For installability, HTTPS (or localhost) is required; on iOS, use Safari's Share → Add to Home Screen.
+All input and resized photo bytes stay in your browser. Profile fields and theme preferences use localStorage, while the photo is stored only in IndexedDB. Older saved avatars are **ignored** and no longer rendered; existing uploaded photos are retained. Remove Photo deletes the photo from the local database. Clearing site data removes all saved information.
 
-### PWA releases
+## Deployment and checks
 
-When shipping a new version, increment the `CACHE` value in `sw.js` to replace pre-cached assets. Service worker installation does not force-refresh an editor with unsaved work. Chrome's install UI is not available in every browser; the in-app button offers an alternative instruction dialog.
+Serve the repository root from a secure HTTPS static host. Relative paths support nested hosting directories. The service worker caches the shell, editor and GIF worker for offline use; bump its cache version on releases. Verify PWA install/refresh and GIF worker behavior on real HTTPS origins and physical iOS/Android devices before promoting a release.
 
-## Character builder and GIF release v1.3
-
-- Replaces the fixed gallery of characters with a single modular, user-built persona. Older settings are safely mapped to the builder options.
-- Constant character blink/breathing motion, glow and ambient background movement. `prefers-reduced-motion` disables ambient preview animations without disabling export.
-- On-device GIF export produces 32 frames in a 3.2-second loop at 10 fps, with progress, cancel, and background encoding in a Web Worker. GIFs use a capped output resolution to preserve performance on phones.
-- No remote encoding server, new runtime dependencies or additional permissions.
-
-## Aura redesign v1.1
-
-- Page-level scrolling is disabled; the stage and editor resize within `100dvh`. On smaller devices the active tab can scroll internally so fields are never clipped.
-- Square and wide cards use darker colors, editorial typography, restrained glow/geometry, and less childish character expressions.
-- Tabs use native buttons, `role=tablist`, `aria-selected`, and arrow-key/Home/End keyboard navigation.
-- Existing custom color selections survive migration; legacy pastel presets migrate to the new Eclipse defaults without losing profile text.
-- `prefers-reduced-motion` disables ambient movement, reroll effects, and transitions.
-
-## Security & privacy
-
-The app never uploads names, tags or profile photos. Files are checked for type and limited to 4 MB before local image resampling; their resized data is saved in IndexedDB. User-provided text is escaped before SVG or HTML markup. No cookies and no tracking. Data can be deleted by clearing this site's browser storage.
-
-## Note on technology
-
-For this tiny static tool, the implementation intentionally uses standards-based browser **ES modules**, instead of React/Vite. This removes runtime dependencies, keeps PWA caching simple, and makes it directly deployable as a static site. If the editor grows substantially, the modules can be migrated to a component framework without changing the SVG artwork or pure design/state utilities.
+Run `npm run check` and validate UI and exported PNG/GIF in browsers. `prefers-reduced-motion` disables continuous preview motion but does not prevent an explicitly requested GIF export.
 
 ## License
 
-MIT for source code and original illustrations in this repository.
-
-### Visual editor v1.3
-- Dark graphite studio with purple accents; no header install prompt or subtitle (PWA manifest and offline support remain).
-- Character categories use actual SVG thumbnails for every style choice (face, hair, eyes, brows, lips, clothing, accessories).
-- Face fullness is a live 75–125% range slider applied to the face geometry and saved with the profile.
-- Skin, iris, hair and clothing colors are shown as selectable color swatches.
-- All selections update the same avatar shared by the animated preview, PNG renderer and GIF frame renderer.
+MIT.

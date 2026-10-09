@@ -1,6 +1,5 @@
-import { CHARACTER_OPTIONS, FACE_WIDTH, FORMATS, MAX, PALETTES, SCENES, createDefaultState, escapeXML, getSavedState, randomize, randomizeCharacter, sanitizeText } from './utils.js';
+import { FORMATS, MAX, PALETTES, SCENES, escapeXML, getSavedState, randomize, sanitizeText } from './utils.js';
 import { renderCardSVG } from './card.js';
-import { characterArtwork } from './characters.js';
 
 const $ = (id) => document.getElementById(id);
 const storageKey = 'profilecard.settings.v1'; // Preserve existing profiles across the visual redesign.
@@ -10,7 +9,7 @@ const state = getSavedState(initialSettings);
 let toastTimeout;
 let animationTimeout;
 let activeTab = 'identity';
-let activeCharacterCategory = 'face';
+let photoRevision=0;
 let gifAbort = null;
 
 function save() {
@@ -48,64 +47,16 @@ function selectTheme(id) {
   refreshControls();refreshCard({magical:true});
 }
 
-const avatarLabels={
- face:'Face shape',skin:'Skin tone',hair:'Hair style',hairColor:'Hair color',eyes:'Eye shape',eyeColor:'Eye color',
- brows:'Eyebrows',mouth:'Mouth / lips',outfit:'Outfit',outfitColor:'Outfit color',accessory:'Accessories'
-};
-const characterCategories=[
- {id:'face',label:'Face',symbol:'◉'},
- {id:'hair',label:'Hair',symbol:'◒'},
- {id:'eyes',label:'Eyes',symbol:'◡'},
- {id:'mouth',label:'Mouth',symbol:'⌣'},
- {id:'outfit',label:'Outfit',symbol:'◈'},
- {id:'extras',label:'Extras',symbol:'✦'}
-];
-const avatarColorFields=new Set(['skin','hairColor','eyeColor','outfitColor']);
-const humanize=(value)=>value.split('-').map(x=>x[0].toUpperCase()+x.slice(1)).join(' ');
-const focusViews={face:'98 77 204 248',hair:'93 45 215 220',eyes:'112 149 176 99',brows:'112 128 176 84',mouth:'131 221 139 94',outfit:'39 256 323 126',accessory:'92 56 216 280'};
-function avatarChoicePreview(field,value){
- const profile={...state.avatar,[field]:value};
- return `<svg viewBox="${focusViews[field]}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">${characterArtwork(profile,{animated:false,time:0})}</svg>`;
-}
-function choiceCards(field){
- const options=CHARACTER_OPTIONS[field];
- return `<div class="builder-group"><div class="section-title"><span>${avatarLabels[field]}</span><span class="section-hint">${options.length} styles</span></div>
- <div class="avatar-option-grid" role="group" aria-label="${avatarLabels[field]}">${options.map(value=>`<button type="button" class="avatar-option ${state.avatar[field]===value?'active':''}" data-avatar-field="${field}" data-avatar-value="${value}" aria-label="${avatarLabels[field]}: ${humanize(value)}" aria-pressed="${state.avatar[field]===value}" title="${humanize(value)}"><span class="avatar-option-art">${avatarChoicePreview(field,value)}</span><span class="avatar-option-name">${humanize(value)}</span></button>`).join('')}</div></div>`;
-}
-function colorChoices(field){
- const options=CHARACTER_OPTIONS[field];
- return `<div class="builder-group"><div class="section-title"><span>${avatarLabels[field]}</span><span class="section-hint">Choose a shade</span></div><div class="builder-swatches" role="group" aria-label="${avatarLabels[field]}">${options.map((value,i)=>`<button type="button" class="avatar-swatch ${state.avatar[field]===value?'active':''}" data-avatar-field="${field}" data-avatar-value="${value}" style="--swatch:${value}" aria-label="${avatarLabels[field]} option ${i+1}: ${value}" aria-pressed="${state.avatar[field]===value}" title="${value}"></button>`).join('')}</div></div>`;
-}
-function faceSlider(){
- return `<div class="builder-group"><div class="section-title"><label for="faceWidthInput">Face fullness</label><output id="faceWidthValue" for="faceWidthInput">${state.avatar.faceWidth}%</output></div>
- <input id="faceWidthInput" class="builder-slider" type="range" min="${FACE_WIDTH.min}" max="${FACE_WIDTH.max}" step="${FACE_WIDTH.step}" value="${state.avatar.faceWidth}" aria-label="Face fullness" aria-valuetext="${state.avatar.faceWidth} percent" />
- <div class="slider-labels"><span>Slender</span><span>Fuller</span></div></div>`;
-}
-function drawBuilder(){
- const parent=$('characterBuilder');
- const content={
-  face:()=>`${faceSlider()}${choiceCards('face')}${colorChoices('skin')}`,
-  hair:()=>`${choiceCards('hair')}${colorChoices('hairColor')}`,
-  eyes:()=>`${choiceCards('eyes')}${choiceCards('brows')}${colorChoices('eyeColor')}`,
-  mouth:()=>choiceCards('mouth'),
-  outfit:()=>`${choiceCards('outfit')}${colorChoices('outfitColor')}`,
-  extras:()=>choiceCards('accessory')
- };
- parent.innerHTML=`<nav class="avatar-categories" aria-label="Character feature categories">${characterCategories.map(cat=>`<button type="button" class="avatar-category ${cat.id===activeCharacterCategory?'active':''}" data-avatar-category="${cat.id}" aria-pressed="${cat.id===activeCharacterCategory}"><span class="avatar-category-icon" aria-hidden="true">${cat.symbol}</span><span>${cat.label}</span></button>`).join('')}</nav><div class="avatar-category-content">${content[activeCharacterCategory]()}</div>`;
- parent.querySelectorAll('[data-avatar-category]').forEach(button=>button.addEventListener('click',()=>{
-  if(activeCharacterCategory===button.dataset.avatarCategory)return;
-  activeCharacterCategory=button.dataset.avatarCategory;drawBuilder();
- }));
- parent.querySelectorAll('[data-avatar-value]').forEach(button=>button.addEventListener('click',()=>{
-   state.avatar[button.dataset.avatarField]=button.dataset.avatarValue;drawBuilder();refreshCard();
- }));
- const slider=parent.querySelector('#faceWidthInput');
- if(slider)slider.addEventListener('input',()=>{
-   state.avatar.faceWidth=Number(slider.value);
-   parent.querySelector('#faceWidthValue').textContent=`${state.avatar.faceWidth}%`;
-   slider.setAttribute('aria-valuetext',`${state.avatar.faceWidth} percent`);
-   refreshCard();
- });
+function refreshPhotoControls(){
+  const hasPhoto=typeof state.photo==='string' && /^data:image\/(png|jpeg|webp);base64,/i.test(state.photo);
+  const image=$('photoPreviewImage');
+  image.hidden=!hasPhoto;
+  if(hasPhoto)image.src=state.photo;
+  else image.removeAttribute('src');
+  $('photoPlaceholder').hidden=hasPhoto;
+  $('removePhotoBtn').hidden=!hasPhoto;
+  $('photoUploadLabel').textContent=hasPhoto?'Replace photo':'Choose photo';
+  $('photoStatus').textContent=hasPhoto?'Your photo is on this device. You can replace or remove it.':'Add a portrait to your card. Nothing gets uploaded to a server.';
 }
 
 function drawPalettes(){
@@ -142,13 +93,7 @@ function refreshControls(){
   $('usernameInput').value='@'+state.username;
   $('bioInput').value=state.bio;
   $('bioCount').textContent=`${state.bio.length} / ${MAX.bio}`;
-  const upload=state.avatarMode==='upload';
-  $('characterMode').classList.toggle('active',!upload);
-  $('characterMode').setAttribute('aria-pressed',String(!upload));
-  $('photoMode').classList.toggle('active',upload);
-  $('photoMode').setAttribute('aria-pressed',String(upload));
-  $('characterBuilder').hidden=upload;
-  $('uploadZone').hidden=!upload;
+  refreshPhotoControls();
   for(const [id,hex] of [['sceneColor',state.sceneColor],['cardColor',state.cardColor],['accentColor',state.accentColor]]){
     $(id+'Input').value=hex;$(id+'Value').textContent=hex.toUpperCase();
   }
@@ -156,10 +101,10 @@ function refreshControls(){
   $('wideBtn').classList.toggle('active',state.format==='wide');
   $('squareBtn').setAttribute('aria-pressed',String(state.format==='square'));
   $('wideBtn').setAttribute('aria-pressed',String(state.format==='wide'));
-  drawBuilder();drawPalettes();drawScenes();drawTags();
+  drawPalettes();drawScenes();drawTags();
 }
 
-function dbAvatar(mode='read',data=null){
+function dbPhoto(mode='read',data=null){
   return new Promise((resolve,reject)=>{
     if(!('indexedDB' in window)) { resolve(null); return; }
     const request=indexedDB.open('profilecard-local-v1',1);
@@ -168,9 +113,9 @@ function dbAvatar(mode='read',data=null){
     request.onsuccess=()=>{
       const db=request.result;
       try{
-        const transaction=db.transaction('assets',mode==='write'?'readwrite':'readonly');
+        const transaction=db.transaction('assets',mode==='read'?'readonly':'readwrite');
         const store=transaction.objectStore('assets');
-        const operation=mode==='write'?store.put(data,'avatar'):store.get('avatar');
+        const operation=mode==='write'?store.put(data,'avatar'):mode==='delete'?store.delete('avatar'):store.get('avatar');
         operation.onsuccess=()=>resolve(operation.result);
         operation.onerror=()=>reject(operation.error);
         transaction.oncomplete=()=>db.close();
@@ -262,7 +207,7 @@ async function exportGif(){
  if(gifAbort)return;
  const controller=new AbortController();gifAbort=controller;
  const button=$('downloadGifBtn'),progress=$('exportProgress'),bar=$('exportProgressBar'),label=$('exportProgressLabel');
- const profile={...state,avatar:{...state.avatar},tags:[...state.tags]};
+ const profile={...state,tags:[...state.tags]};
  const width=profile.format==='wide'?600:420,height=profile.format==='wide'?315:420;
  const fps=10,frames=32;
  let worker;
@@ -293,7 +238,7 @@ async function exportGif(){
 
 
 function activateTab(tab, {focus=false}={}) {
-  if(!['identity','character','aura'].includes(tab))return;
+  if(!['identity','photo','aura'].includes(tab))return;
   activeTab=tab;
   for(const button of document.querySelectorAll('[data-tab]')){
     const isActive=button.dataset.tab===tab;
@@ -326,14 +271,25 @@ function events(){
   $('usernameInput').addEventListener('input',e=>{state.username=sanitizeText(e.target.value.replace(/^@+/,''),MAX.username-1);refreshCard();});
   $('usernameInput').addEventListener('blur',()=>{$('usernameInput').value='@'+state.username;});
   $('bioInput').addEventListener('input',e=>{state.bio=sanitizeText(e.target.value,MAX.bio);$('bioCount').textContent=`${state.bio.length} / ${MAX.bio}`;refreshCard();});
-  $('characterMode').addEventListener('click',()=>{state.avatarMode='character';refreshControls();refreshCard({magical:true});});
-  $('randomCharacterBtn').addEventListener('click',()=>{state.avatar=randomizeCharacter(state.avatar);state.avatarMode='character';refreshControls();refreshCard({magical:true});});
-  $('photoMode').addEventListener('click',()=>{state.avatarMode='upload';refreshControls();refreshCard({magical:true});});
-  $('avatarUpload').addEventListener('change',async e=>{
+  $('photoUpload').addEventListener('change',async e=>{
     const file=e.target.files?.[0];if(!file)return;
-    try{state.photo=await resizeImage(file);await dbAvatar('write',state.photo).catch(()=>{});refreshCard({magical:true});toast('Photo added — only saved on this device.');}
-    catch(error){toast(error.message||'Could not open that image.');}
-    e.target.value='';
+    const revision=++photoRevision;
+    try{
+      const image=await resizeImage(file);
+      if(revision!==photoRevision)return;
+      state.photo=image;
+      refreshPhotoControls();refreshCard({magical:true});
+      await dbPhoto('write',image).catch(()=>{});
+      toast('Photo added — stored only on your device.');
+    }catch(error){if(revision===photoRevision)toast(error.message||'Could not open that image.');}
+    finally{e.target.value='';}
+  });
+  $('removePhotoBtn').addEventListener('click',async()=>{
+    ++photoRevision;
+    state.photo=null;
+    refreshPhotoControls();refreshCard();
+    try{await dbPhoto('delete');toast('Photo removed from this device.');}
+    catch{toast('Photo removed from the card. To clear the stored copy, clear site data.');}
   });
   for(const id of ['sceneColor','cardColor','accentColor']){
     $(id+'Input').addEventListener('input',e=>{state[id]=e.target.value.toUpperCase();$(id+'Value').textContent=state[id];state.theme='custom';drawPalettes();refreshCard();});
@@ -344,7 +300,7 @@ function events(){
   $('wideBtn').addEventListener('click',()=>{state.format='wide';refreshControls();refreshCard({magical:true});});
   $('randomBtn').addEventListener('click',()=>{
     Object.assign(state,randomize(state));
-    // Character, custom-uploaded photos, identity and format remain unchanged.
+    // Photo, identity and format remain unchanged.
     refreshControls();refreshCard({magical:true});
   });
   $('downloadBtn').addEventListener('click',()=>exportImage(false));
@@ -355,7 +311,7 @@ function events(){
 
 async function init(){
   refreshControls();events();activateTab(activeTab);refreshCard();
-  try { const photo=await dbAvatar(); if(typeof photo==='string'&&photo.startsWith('data:image/')){state.photo=photo;refreshCard();} } catch { /* Settings work without IndexedDB. */ }
+  try { const revision=photoRevision;const photo=await dbPhoto(); if(revision===photoRevision&&typeof photo==='string'&&/^data:image\/(png|jpeg|webp);base64,/i.test(photo)){state.photo=photo;refreshPhotoControls();refreshCard();} } catch { /* Settings work without IndexedDB. */ }
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{}),{once:true});
   }
