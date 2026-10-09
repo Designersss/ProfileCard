@@ -94,6 +94,6 @@ export function renderCardSVG(state, {animated = true, time = 0} = {}) {
     <g transform="translate(${(Math.cos(phase)*4).toFixed(2)} ${(Math.sin(phase)*4).toFixed(2)})" class="${animated?'aura-lines':''}">${glyphs}</g>
     ${art}
     ${info}
-    ${wide ? txt('PROFILECARD  //  V1.2',46,593,14,contrastColor(base),{weight:700,spacing:1.7}) : txt('PROFILECARD  /  V1.2',45,42,13,contrastColor(base),{weight:800,spacing:1.5})}
+    ${wide ? txt('PROFILECARD  //  V1.3',46,593,14,contrastColor(base),{weight:700,spacing:1.7}) : txt('PROFILECARD  /  V1.3',45,42,13,contrastColor(base),{weight:800,spacing:1.5})}
   </svg>`;
 }

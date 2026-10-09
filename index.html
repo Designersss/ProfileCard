@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#F5F6F9" />
-  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#101114" />
+  <meta name="color-scheme" content="dark" />
   <meta name="description" content="Create an aura-powered digital identity card. Reroll your vibe, customize your look, and download it for free." />
   <meta property="og:title" content="profilecard. — Make your own aura." />
   <meta property="og:description" content="An animated, offline-ready identity card studio. No sign-up, no watermark." />
@@ -23,14 +23,6 @@
     <header class="site-header">
       <div class="brand-wrap">
         <a class="wordmark" href="./" aria-label="ProfileCard home">profilecard<span>.</span></a>
-        <span class="brand-subtitle">your internet self, amplified</span>
-      </div>
-      <div class="header-actions">
-        <span class="header-pill"><span class="signal-dot"></span> AURA STUDIO / 01</span>
-        <button class="install-button" type="button" id="installBtn" aria-label="Install ProfileCard as an app">
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
-          <span>Install app</span>
-        </button>
       </div>
     </header>
     <main class="workspace" aria-label="ProfileCard aura studio">
@@ -51,7 +43,7 @@
         <p class="preview-note"><span class="signal-dot"></span> No watermark <span class="separator">/</span> No sign-up <span class="separator">/</span> Made to share</p>
       </section>
       <section class="editor-panel" aria-labelledby="editorHeading">
-        <div class="editor-heading"><div><p class="eyebrow">CUSTOMIZATION PANEL</p><h2 id="editorHeading">Shape your identity<span>✦</span></h2></div><span class="tiny-number">V1.2</span></div>
+        <div class="editor-heading"><div><p class="eyebrow">CUSTOMIZATION PANEL</p><h2 id="editorHeading">Shape your identity<span>✦</span></h2></div><span class="tiny-number">V1.3</span></div>
         <div class="editor-tabs" role="tablist" aria-label="Editor sections">
           <button type="button" class="editor-tab active" id="tabIdentity" role="tab" aria-selected="true" aria-controls="panelIdentity" data-tab="identity">Identity</button>
           <button type="button" class="editor-tab" id="tabCharacter" role="tab" aria-selected="false" aria-controls="panelCharacter" data-tab="character" tabindex="-1">Character</button>
@@ -74,7 +66,6 @@
               <div id="characterBuilder" class="character-builder"></div>
               <div class="upload-zone" id="uploadZone" hidden><label for="avatarUpload" class="upload-button">Upload a photo (max 4 MB)</label><input id="avatarUpload" type="file" accept="image/png,image/jpeg,image/webp" /><p>Private. JPG, PNG, or WebP, stored on this device.</p></div>
             </div>
-            <p class="panel-tip">Build yourself feature by feature, or let Random pick a look. Your character is yours.</p>
           </div>
           <div class="editor-tab-panel" id="panelAura" role="tabpanel" aria-labelledby="tabAura" data-panel="aura" hidden>
             <div class="editor-section first-section"><div class="section-title"><span>Aura palette</span><span class="section-hint" id="paletteLabel">Eclipse</span></div><div class="palette-list" id="paletteList" role="group" aria-label="Choose aura color theme"></div></div>
@@ -88,6 +79,5 @@
     </main>
   </div>
   <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
-  <dialog id="installDialog" class="install-dialog"><div class="dialog-inner"><div class="dialog-icon">✧</div><h2>Take ProfileCard with you</h2><p id="installInstructions">Use your browser menu to add ProfileCard to your home screen.</p><button type="button" id="dismissInstall" class="action-primary">Got it</button></div></dialog>
 </body>
 </html>

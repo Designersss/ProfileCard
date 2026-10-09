@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { escapeXML,normalizeHex,contrastColor,wrapText,randomize,randomizeCharacter,sanitizeCharacter,CHARACTER_OPTIONS,createDefaultState,getSavedState,FORMATS,PALETTES,SCENES } from '../src/utils.js';
+import { escapeXML,normalizeHex,contrastColor,wrapText,randomize,randomizeCharacter,sanitizeCharacter,CHARACTER_OPTIONS,createDefaultState,getSavedState,clampFaceWidth,FACE_WIDTH,FORMATS,PALETTES,SCENES } from '../src/utils.js';
 import { renderCardSVG } from '../src/card.js';
 import { characterSVG,characterArtwork } from '../src/characters.js';
 import { GifEncoder } from '../src/gif.js';
@@ -33,14 +33,16 @@ test('every independently customizable avatar option is valid',()=>{
 });
 test('avatar sanitizer rejects injected or unsupported features',()=>{
  const avatar=sanitizeCharacter({face:'<script>',hairColor:'url(javascript:bad)',accessory:'unknown'});
- for(const [key,value] of Object.entries(avatar))assert.ok(CHARACTER_OPTIONS[key].includes(value));
+ for(const [key,value] of Object.entries(avatar))if(key!=='faceWidth')assert.ok(CHARACTER_OPTIONS[key].includes(value));
+ assert.equal(avatar.faceWidth,100);
 });
 test('random avatar always changes at least one option and remains valid',()=>{
  const current=createDefaultState().avatar;
  for(const random of [()=>0,()=>.3,()=>.999]){
   const next=randomizeCharacter(current,random);
   assert.notDeepEqual(next,current);
-  for(const [key,value] of Object.entries(next))assert.ok(CHARACTER_OPTIONS[key].includes(value));
+  for(const [key,value] of Object.entries(next))if(key!=='faceWidth')assert.ok(CHARACTER_OPTIONS[key].includes(value));
+  assert.ok(next.faceWidth>=FACE_WIDTH.min&&next.faceWidth<=FACE_WIDTH.max);
  }
 });
 test('legacy character migration keeps profile and respects intentionally customized outfits',()=>{
@@ -84,4 +86,29 @@ test('GIF rejects invalid sizes and pixel arrays',()=>{
  assert.throws(()=>new GifEncoder(0,100));
  const e=new GifEncoder(100,50);assert.throws(()=>e.addFrame(new Uint8Array(3)));
  assert.throws(()=>e.finish());
+});
+
+test('face fullness is continuous, safe and survives profile migration',()=>{
+ assert.equal(clampFaceWidth('123'),123);
+ assert.equal(clampFaceWidth(-100),FACE_WIDTH.min);
+ assert.equal(clampFaceWidth(1000),FACE_WIDTH.max);
+ assert.equal(clampFaceWidth('not a number'),FACE_WIDTH.default);
+ assert.equal(getSavedState({avatar:{faceWidth:119}}).avatar.faceWidth,119);
+ assert.equal(getSavedState({avatar:{faceWidth:'bogus'}}).avatar.faceWidth,100);
+ assert.equal(getSavedState({avatar:{eyes:'wide'}}).avatar.faceWidth,100);
+});
+test('face fullness changes actual exported artwork geometry',()=>{
+ const avatar=createDefaultState().avatar;
+ const narrow=characterArtwork({...avatar,faceWidth:75});
+ const wide=characterArtwork({...avatar,faceWidth:125});
+ assert.ok(narrow.includes('scale(0.750 1)'));
+ assert.ok(wide.includes('scale(1.250 1)'));
+ assert.notEqual(narrow,wide);
+});
+test('visual character choices use existing artwork, not a detached preset avatar',()=>{
+ const avatar=createDefaultState().avatar;
+ for(const category of ['face','hair','eyes','brows','mouth','outfit','accessory']){
+  const option=CHARACTER_OPTIONS[category].at(-1);
+  assert.ok(characterArtwork({...avatar,[category]:option}).includes('<path'));
+ }
 });

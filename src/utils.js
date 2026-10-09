@@ -79,26 +79,33 @@ export const CHARACTER_OPTIONS = Object.freeze({
   outfitColor:['#171B29','#353F57','#6D57A5','#3D7F80','#CA655D','#E4C6A1','#E7E9F0','#C69044'],
   accessory:['none','glasses','headphones','earrings','beanie','visor','chain','mask']
 });
+export const FACE_WIDTH = Object.freeze({min:75,max:125,step:1,default:100});
+export function clampFaceWidth(value) {
+  const number=Number(value);
+  return Number.isFinite(number)?Math.min(FACE_WIDTH.max,Math.max(FACE_WIDTH.min,Math.round(number))):FACE_WIDTH.default;
+}
 const legacyCharacters = Object.freeze({
   noah:{hair:'messy',outfit:'hoodie'},ivy:{hair:'long',outfit:'jacket',hairColor:'#322626'},
   kai:{hair:'crop',accessory:'glasses'},mira:{hair:'bob',accessory:'headphones',hairColor:'#E49CB2'},
   leo:{hair:'undercut',accessory:'beanie'},pixel:{hair:'buzz'},byte:{hair:'crop'}
 });
 export function createDefaultCharacter(){return {
-  face:'angular',skin:'#DEAB8B',hair:'messy',hairColor:'#151827',eyes:'focused',eyeColor:'#26243B',
+  face:'angular',faceWidth:100,skin:'#DEAB8B',hair:'messy',hairColor:'#151827',eyes:'focused',eyeColor:'#26243B',
   brows:'sharp',mouth:'smirk',outfit:'hoodie',outfitColor:'#171B29',accessory:'none'
 };}
 export function sanitizeCharacter(source, legacyId) {
   const legacy=legacyCharacters[legacyId]||{};
   const values=source&&typeof source==='object'&&!Array.isArray(source)?source:{};
   const defaults={...createDefaultCharacter(),...legacy};
-  return Object.fromEntries(Object.entries(CHARACTER_OPTIONS).map(([key,options])=>
-    [key,options.includes(values[key])?values[key]:defaults[key]]));
+  return { ...Object.fromEntries(Object.entries(CHARACTER_OPTIONS).map(([key,options])=>
+    [key,options.includes(values[key])?values[key]:defaults[key]])),
+    faceWidth:clampFaceWidth(values.faceWidth ?? defaults.faceWidth) };
 }
 export function randomizeCharacter(character,random=Math.random){
   const previous=sanitizeCharacter(character);
   const result=Object.fromEntries(Object.entries(CHARACTER_OPTIONS).map(([key,options])=>
     [key,options[Math.min(options.length-1,Math.max(0,Math.floor(random()*options.length)))] ]));
+  result.faceWidth=clampFaceWidth(FACE_WIDTH.min + random()*(FACE_WIDTH.max-FACE_WIDTH.min+1));
   if(Object.keys(result).every(key=>result[key]===previous[key])){
     const alternatives=CHARACTER_OPTIONS.hair;
     result.hair=alternatives[(alternatives.indexOf(result.hair)+1)%alternatives.length];
