@@ -1,5 +1,4 @@
-import { CHARACTERS, FORMATS, MAX, PALETTES, SCENES, createDefaultState, escapeXML, getSavedState, randomize, sanitizeText } from './utils.js';
-import { characterArtwork } from './characters.js';
+import { CHARACTER_OPTIONS, FORMATS, MAX, PALETTES, SCENES, createDefaultState, escapeXML, getSavedState, randomize, randomizeCharacter, sanitizeText } from './utils.js';
 import { renderCardSVG } from './card.js';
 
 const $ = (id) => document.getElementById(id);
@@ -11,6 +10,7 @@ let deferredInstallPrompt = null;
 let toastTimeout;
 let animationTimeout;
 let activeTab = 'identity';
+let gifAbort = null;
 
 function save() {
   const {photo, ...settings} = state;
@@ -47,15 +47,23 @@ function selectTheme(id) {
   refreshControls();refreshCard({magical:true});
 }
 
-function drawCharacters() {
-  const list=$('charactersList');
-  list.innerHTML=CHARACTERS.map(c=>`<button type="button" class="character-choice ${state.character===c.id?'active':''}" aria-label="Choose ${c.name} character" title="${c.name}" aria-pressed="${state.character===c.id}" data-character="${c.id}">
-   <svg viewBox="50 55 300 300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect x="50" y="55" width="300" height="300" fill="${c.id==='pixel'?'#eceaf8':c.id==='byte'?'#e8f0ff':'#f7f4fd'}"/>${characterArtwork(c.id)}</svg>
-   ${state.character===c.id?'<span class="choice-check">✓</span>':''}</button>`).join('');
-  list.querySelectorAll('[data-character]').forEach(button=>button.addEventListener('click',()=>{
-    state.character=button.dataset.character;
-    drawCharacters();refreshCard({magical:true});
-  }));
+const avatarLabels={
+ face:'Face shape',skin:'Skin tone',hair:'Hairstyle',hairColor:'Hair color',eyes:'Eyes',eyeColor:'Eye color',
+ brows:'Eyebrows',mouth:'Mouth / lips',outfit:'Outfit',outfitColor:'Outfit color',accessory:'Accessories'
+};
+const avatarColorFields=new Set(['skin','hairColor','eyeColor','outfitColor']);
+const humanize=(value)=>value.split('-').map(x=>x[0].toUpperCase()+x.slice(1)).join(' ');
+function drawBuilder(){
+ const parent=$('characterBuilder');
+ parent.innerHTML=`<div class="builder-grid">${Object.entries(CHARACTER_OPTIONS).filter(([key])=>!avatarColorFields.has(key)).map(([key,options])=>
+  `<label class="builder-field"><span>${avatarLabels[key]}</span><select data-avatar-field="${key}">${options.map(value=>`<option value="${value}" ${state.avatar[key]===value?'selected':''}>${humanize(value)}</option>`).join('')}</select></label>`).join('')}</div>
+ <div class="builder-colors">${[...avatarColorFields].map(key=>`<div class="builder-color"><span class="field-label">${avatarLabels[key]}</span><div class="builder-swatches" role="group" aria-label="${avatarLabels[key]}">${CHARACTER_OPTIONS[key].map(value=>`<button class="avatar-swatch ${state.avatar[key]===value?'active':''}" type="button" data-avatar-field="${key}" data-avatar-value="${value}" style="--swatch:${value}" aria-label="${avatarLabels[key]} ${value}" aria-pressed="${state.avatar[key]===value}" title="${value}"></button>`).join('')}</div></div>`).join('')}</div>`;
+ parent.querySelectorAll('select[data-avatar-field]').forEach(select=>select.addEventListener('change',()=>{
+   state.avatar[select.dataset.avatarField]=select.value;refreshCard({magical:true});
+ }));
+ parent.querySelectorAll('button[data-avatar-field]').forEach(button=>button.addEventListener('click',()=>{
+   state.avatar[button.dataset.avatarField]=button.dataset.avatarValue;drawBuilder();refreshCard({magical:true});
+ }));
 }
 
 function drawPalettes(){
@@ -97,7 +105,7 @@ function refreshControls(){
   $('characterMode').setAttribute('aria-pressed',String(!upload));
   $('photoMode').classList.toggle('active',upload);
   $('photoMode').setAttribute('aria-pressed',String(upload));
-  $('charactersList').hidden=upload;
+  $('characterBuilder').hidden=upload;
   $('uploadZone').hidden=!upload;
   for(const [id,hex] of [['sceneColor',state.sceneColor],['cardColor',state.cardColor],['accentColor',state.accentColor]]){
     $(id+'Input').value=hex;$(id+'Value').textContent=hex.toUpperCase();
@@ -106,7 +114,7 @@ function refreshControls(){
   $('wideBtn').classList.toggle('active',state.format==='wide');
   $('squareBtn').setAttribute('aria-pressed',String(state.format==='square'));
   $('wideBtn').setAttribute('aria-pressed',String(state.format==='wide'));
-  drawCharacters();drawPalettes();drawScenes();drawTags();
+  drawBuilder();drawPalettes();drawScenes();drawTags();
 }
 
 function dbAvatar(mode='read',data=null){
@@ -184,6 +192,63 @@ async function exportImage(copy=false){
   finally {button.disabled=false;}
 }
 
+function workerResponse(worker,signal){
+ return new Promise((resolve,reject)=>{
+  const clear=()=>{worker.removeEventListener('message',message);worker.removeEventListener('error',error);signal.removeEventListener('abort',abort);};
+  const message=e=>{clear();e.data?.type==='error'?reject(Error(e.data.message)):resolve(e.data);};
+  const error=e=>{clear();reject(Error(e.message||'GIF worker failed'));};
+  const abort=()=>{clear();reject(new DOMException('Cancelled','AbortError'));};
+  worker.addEventListener('message',message,{once:true});worker.addEventListener('error',error,{once:true});
+  if(signal.aborted)abort();else signal.addEventListener('abort',abort,{once:true});
+ });
+}
+async function framePixels(profile,time,width,height,signal){
+ if(signal.aborted)throw new DOMException('Cancelled','AbortError');
+ const svg=renderCardSVG(profile,{animated:false,time});
+ const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
+ try{
+  const image=new Image();image.src=url;await image.decode();
+  if(signal.aborted)throw new DOMException('Cancelled','AbortError');
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+  const context=canvas.getContext('2d',{willReadFrequently:true});
+  if(!context)throw Error('Canvas is unavailable.');
+  context.drawImage(image,0,0,width,height);
+  return context.getImageData(0,0,width,height).data;
+ }finally{URL.revokeObjectURL(url);}
+}
+async function exportGif(){
+ if(gifAbort)return;
+ const controller=new AbortController();gifAbort=controller;
+ const button=$('downloadGifBtn'),progress=$('exportProgress'),bar=$('exportProgressBar'),label=$('exportProgressLabel');
+ const profile={...state,avatar:{...state.avatar},tags:[...state.tags]};
+ const width=profile.format==='wide'?600:420,height=profile.format==='wide'?315:420;
+ const fps=10,frames=32;
+ let worker;
+ button.disabled=true;progress.hidden=false;bar.value=0;
+ try{
+  worker=new Worker(new URL('./gif-worker.js',import.meta.url),{type:'module'});
+  let awaiting=workerResponse(worker,controller.signal);
+  worker.postMessage({type:'start',width,height,delay:100/fps});await awaiting;
+  for(let i=0;i<frames;i++){
+   const rgba=await framePixels(profile,i/fps,width,height,controller.signal);
+   awaiting=workerResponse(worker,controller.signal);
+   worker.postMessage({type:'frame',buffer:rgba.buffer},[rgba.buffer]);
+   await awaiting;
+   bar.value=Math.round((i+1)*100/frames);label.textContent=`Rendering GIF… ${bar.value}%`;
+   // Let the browser paint progress and remain responsive to cancellation.
+   await new Promise(requestAnimationFrame);
+  }
+  awaiting=workerResponse(worker,controller.signal);worker.postMessage({type:'finish'});
+  const result=await awaiting;
+  if(result?.type!=='done'||result.blob?.type!=='image/gif')throw Error('GIF could not be completed.');
+  const url=URL.createObjectURL(result.blob),a=document.createElement('a');
+  a.href=url;a.download=`profilecard-${(profile.username||'me').replace(/[^a-zA-Z0-9_-]/g,'_')}-${profile.format}.gif`;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+  toast('Your animated aura is ready!');
+ }catch(error){if(error.name==='AbortError')toast('GIF export cancelled.');else{console.error('GIF export failed',error);toast('Could not export GIF on this device. Try again.');}}
+ finally{worker?.terminate();gifAbort=null;button.disabled=false;progress.hidden=true;}
+}
+
 function installFlow(){
   $('installBtn').addEventListener('click',async()=>{
     if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone){toast('ProfileCard is already installed.');return;}
@@ -236,6 +301,7 @@ function events(){
   $('usernameInput').addEventListener('blur',()=>{$('usernameInput').value='@'+state.username;});
   $('bioInput').addEventListener('input',e=>{state.bio=sanitizeText(e.target.value,MAX.bio);$('bioCount').textContent=`${state.bio.length} / ${MAX.bio}`;refreshCard();});
   $('characterMode').addEventListener('click',()=>{state.avatarMode='character';refreshControls();refreshCard({magical:true});});
+  $('randomCharacterBtn').addEventListener('click',()=>{state.avatar=randomizeCharacter(state.avatar);state.avatarMode='character';refreshControls();refreshCard({magical:true});});
   $('photoMode').addEventListener('click',()=>{state.avatarMode='upload';refreshControls();refreshCard({magical:true});});
   $('avatarUpload').addEventListener('change',async e=>{
     const file=e.target.files?.[0];if(!file)return;
@@ -252,10 +318,12 @@ function events(){
   $('wideBtn').addEventListener('click',()=>{state.format='wide';refreshControls();refreshCard({magical:true});});
   $('randomBtn').addEventListener('click',()=>{
     Object.assign(state,randomize(state));
-    // The core identity data is intentionally unchanged, including custom-uploaded photos.
+    // Character, custom-uploaded photos, identity and format remain unchanged.
     refreshControls();refreshCard({magical:true});
   });
   $('downloadBtn').addEventListener('click',()=>exportImage(false));
+  $('downloadGifBtn').addEventListener('click',exportGif);
+  $('cancelGifBtn').addEventListener('click',()=>gifAbort?.abort());
   $('copyBtn').addEventListener('click',()=>exportImage(true));
   installFlow();
 }

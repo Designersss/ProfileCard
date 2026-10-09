@@ -1,6 +1,6 @@
 # profilecard.
 
-**Make your own aura.** A free, full-viewport identity card studio with original vector characters, six graphic aura scenes, Reroll Aura, PNG export, local-first settings and offline-capable PWA installation.
+**Make your own aura.** A free, full-viewport identity card studio with a custom modular vector character, six graphic aura scenes, Reroll Aura, PNG export, local-first settings and offline-capable PWA installation.
 
 ## Run
 
@@ -15,11 +15,11 @@ Open `http://localhost:4173`. Test with `npm run check`.
 ## Features
 
 - Full-viewport desktop/mobile studio with Identity / Character / Aura tabs; the document never scrolls (on small screens only the control tab content may scroll)
-- 7 original vector characters or an uploaded photo (never sent to a server)
+- 7 a custom modular vector character or an uploaded photo (never sent to a server)
 - 8 aura palettes (Eclipse, Phantom, Drift, Nova, Zenith, Frost, Chrome, Ember), 6 geometric aura scenes and custom scene/panel/accent colors
 - Name, @handle, description and up to 3 tags
-- Reroll Aura preserving identity fields and uploaded photos, and avoiding unchanged palette selection
-- Square 1080×1080 and wide 1200×630 PNG, plus Copy Image where supported
+- Independent Random character and Reroll Aura actions, with identity fields, uploaded photos and existing avatar unaffected by aura-only rerolls
+- Square 1080×1080 and wide 1200×630 PNG; 3.2-second looping GIF (420×420 or 600×315 at 10 fps) and Copy Image where supported
 - Installable PWA, offline shell, local preferences, IndexedDB photo persistence
 - Accessible forms, reduced-motion support and keyboard navigability
 
@@ -29,9 +29,11 @@ Open `http://localhost:4173`. Test with `npm run check`.
 index.html               Semantic editor layout
 styles.css               Design system, responsive UI, motion
 src/utils.js             Validation, colors, randomizer, presets
-src/characters.js        Original scalable SVG characters
+src/characters.js        Modular, customizable character artwork
 src/card.js              Shared SVG preview and export renderer
-src/app.js               Browser interactions, storage, PWA, export
+src/app.js               Browser interactions, storage, PWA, PNG and animated GIF export
+src/gif.js               Offline animated GIF89a encoder (RGB332 palette, LZW)
+src/gif-worker.js        Asynchronous GIF compression worker
 sw.js                    Offline-first service worker
 manifest.webmanifest     PWA manifest
 assets/                  Original application icons
@@ -41,7 +43,7 @@ tests/                   Node unit tests
 .github/workflows/       GitHub CI
 ```
 
-No remote fonts, analytics, requests to third-party services, paid API calls or generated AI assets at runtime. The same SVG scene renderer is used both for the live preview and PNG export, keeping compositions consistent. Preview motion is intentionally excluded from static image export.
+No remote fonts, analytics, requests to third-party services, paid API calls or generated AI assets at runtime. The same SVG scene renderer is used both for the live preview and PNG export, keeping compositions consistent. PNG captures the static pose; exported GIF frames sample the same SVG composition on a deterministic animation timeline. GIF has a 256-color palette, so some banding may appear on gradients.
 
 ## Deployment
 
@@ -50,6 +52,13 @@ Deploy the repository root to any **HTTPS static host** (Cloudflare Pages, Netli
 ### PWA releases
 
 When shipping a new version, increment the `CACHE` value in `sw.js` to replace pre-cached assets. Service worker installation does not force-refresh an editor with unsaved work. Chrome's install UI is not available in every browser; the in-app button offers an alternative instruction dialog.
+
+## Character builder and GIF release v1.2
+
+- Replaces the fixed gallery of characters with a single modular, user-built persona. Older settings are safely mapped to the builder options.
+- Constant character blink/breathing motion, glow and ambient background movement. `prefers-reduced-motion` disables ambient preview animations without disabling export.
+- On-device GIF export produces 32 frames in a 3.2-second loop at 10 fps, with progress, cancel, and background encoding in a Web Worker. GIFs use a capped output resolution to preserve performance on phones.
+- No remote encoding server, new runtime dependencies or additional permissions.
 
 ## Aura redesign v1.1
 
