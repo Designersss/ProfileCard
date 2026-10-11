@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#101114" />
   <meta name="color-scheme" content="dark" />
-  <meta name="description" content="Create an aura-powered digital identity card. Reroll your vibe, customize your look, and download it for free." />
+  <meta name="description" content="Create an aura-powered digital identity card. Reroll your vibe, upload your photo, and download it for free." />
   <meta property="og:title" content="profilecard. — Make your own aura." />
   <meta property="og:description" content="An animated, offline-ready identity card studio. No sign-up, no watermark." />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -43,10 +43,10 @@
         <p class="preview-note"><span class="signal-dot"></span> No watermark <span class="separator">/</span> No sign-up <span class="separator">/</span> Made to share</p>
       </section>
       <section class="editor-panel" aria-labelledby="editorHeading">
-        <div class="editor-heading"><div><p class="eyebrow">CUSTOMIZATION PANEL</p><h2 id="editorHeading">Shape your identity<span>✦</span></h2></div><span class="tiny-number">V1.3</span></div>
+        <div class="editor-heading"><div><p class="eyebrow">CUSTOMIZATION PANEL</p><h2 id="editorHeading">Shape your identity<span>✦</span></h2></div><span class="tiny-number">V1.4</span></div>
         <div class="editor-tabs" role="tablist" aria-label="Editor sections">
           <button type="button" class="editor-tab active" id="tabIdentity" role="tab" aria-selected="true" aria-controls="panelIdentity" data-tab="identity">Identity</button>
-          <button type="button" class="editor-tab" id="tabCharacter" role="tab" aria-selected="false" aria-controls="panelCharacter" data-tab="character" tabindex="-1">Character</button>
+          <button type="button" class="editor-tab" id="tabPhoto" role="tab" aria-selected="false" aria-controls="panelPhoto" data-tab="photo" tabindex="-1">Photo</button>
           <button type="button" class="editor-tab" id="tabAura" role="tab" aria-selected="false" aria-controls="panelAura" data-tab="aura" tabindex="-1">Aura</button>
         </div>
         <form id="editorForm" novalidate>
@@ -59,19 +59,30 @@
             <div class="editor-section"><div class="section-title"><span>Identity tags</span><span class="section-hint">up to 3</span></div><div class="tag-row" id="tagList"></div><div class="add-tag-wrap"><label class="sr-only" for="tagInput">Add a tag</label><input id="tagInput" maxlength="18" placeholder="Add a tag" /><button type="button" id="addTagBtn" aria-label="Add tag">+</button></div></div>
             <div class="editor-section compact-section"><div class="section-title"><span>Export format</span><span class="section-hint">ready to share</span></div><div class="format-row" role="group" aria-label="Choose image format"><button id="squareBtn" type="button" aria-pressed="true" class="active">▢ &nbsp; Square</button><button id="wideBtn" type="button" aria-pressed="false">▭ &nbsp; Wide</button></div></div>
           </div>
-          <div class="editor-tab-panel" id="panelCharacter" role="tabpanel" aria-labelledby="tabCharacter" data-panel="character" hidden>
-            <div class="editor-section first-section" id="avatarSection">
-              <div class="section-title"><span>Build your character</span><button type="button" class="mini-reroll" id="randomCharacterBtn">✧ Random character</button></div>
-              <div class="two-way-switch" role="group" aria-label="Avatar type"><button type="button" id="characterMode" class="active" aria-pressed="true">Create yours</button><button type="button" id="photoMode" aria-pressed="false">My photo</button></div>
-              <div id="characterBuilder" class="character-builder"></div>
-              <div class="upload-zone" id="uploadZone" hidden><label for="avatarUpload" class="upload-button">Upload a photo (max 4 MB)</label><input id="avatarUpload" type="file" accept="image/png,image/jpeg,image/webp" /><p>Private. JPG, PNG, or WebP, stored on this device.</p></div>
+          <div class="editor-tab-panel" id="panelPhoto" role="tabpanel" aria-labelledby="tabPhoto" data-panel="photo" hidden>
+            <div class="editor-section first-section" id="photoSection">
+              <div class="section-title"><span>Your photo</span><span class="section-hint">local and private</span></div>
+              <div class="photo-editor">
+                <div class="photo-preview" id="photoPreview" aria-label="Uploaded photo preview">
+                  <img id="photoPreviewImage" alt="Your uploaded portrait" hidden />
+                  <div class="photo-placeholder" id="photoPlaceholder" aria-hidden="true"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="m4 17 5-5 4 4 3-3 4 4"/></svg><span>YOUR PHOTO</span></div>
+                </div>
+                <div class="photo-editor-details">
+                  <p class="photo-title">Make it personal.</p>
+                  <p class="photo-description" id="photoStatus">Add a portrait to your card. Nothing gets uploaded to a server.</p>
+                  <label for="photoUpload" class="upload-button" id="photoUploadLabel">Choose photo</label>
+                  <input class="sr-only-file" id="photoUpload" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Choose photo" />
+                  <button class="remove-photo" type="button" id="removePhotoBtn" hidden>Remove photo</button>
+                </div>
+              </div>
+              <p class="photo-helper">PNG, JPG or WebP · up to 4 MB · saved locally on this device. Your photo is cropped to fit your card.</p>
             </div>
           </div>
           <div class="editor-tab-panel" id="panelAura" role="tabpanel" aria-labelledby="tabAura" data-panel="aura" hidden>
             <div class="editor-section first-section"><div class="section-title"><span>Aura palette</span><span class="section-hint" id="paletteLabel">Eclipse</span></div><div class="palette-list" id="paletteList" role="group" aria-label="Choose aura color theme"></div></div>
             <div class="editor-section"><div class="section-title"><span>Scene</span><span class="section-hint" id="sceneLabel">Halo</span></div><div class="scene-grid" id="sceneList" role="group" aria-label="Choose background scene"></div></div>
             <div class="editor-section"><div class="section-title"><span>Custom colors</span><span class="section-hint">make it yours</span></div><div class="color-row"><label class="color-field"><span>Background</span><span class="color-input-wrap"><input type="color" id="sceneColorInput" aria-label="Choose background color" /><output id="sceneColorValue"></output></span></label><label class="color-field"><span>Info panel</span><span class="color-input-wrap"><input type="color" id="cardColorInput" aria-label="Choose information card color" /><output id="cardColorValue"></output></span></label><label class="color-field"><span>Accent</span><span class="color-input-wrap"><input type="color" id="accentColorInput" aria-label="Choose accent color" /><output id="accentColorValue"></output></span></label></div></div>
-            <p class="panel-tip">Curated presets or total control. Reroll Aura only changes the look of your card. Use Random character to remix your avatar.</p>
+            <p class="panel-tip">Use curated presets or choose your own colors. Reroll Aura changes the look, never your photo or identity.</p>
           </div>
         </form>
         <div class="editor-bottom"><button type="button" class="random-button" id="randomBtn"><span class="random-emoji">✧</span> Reroll Aura <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h12m0 0-4-4m4 4-4 4M20 17H8m0 0 4-4m-4 4 4 4"/></svg></button><div class="privacy-row">Offline-ready PWA <span>·</span> Your data stays on this device</div></div>

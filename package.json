@@ -1,9 +1,9 @@
 {
   "name": "profilecard",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
-  "description": "Create a playful, personalized identity card. Offline-first PWA with no account or backend.",
+  "description": "Create a photo-first, personalized identity card. Offline-first PWA with no account or backend.",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
