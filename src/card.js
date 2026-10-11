@@ -1,4 +1,4 @@
-import { contrastColor, escapeXML, FORMATS, normalizeHex, wrapText } from './utils.js';
+import { AURA_LOOP_SECONDS, contrastColor, escapeXML, FORMATS, normalizeHex, wrapText } from './utils.js';
 
 function mix(a, b, ratio) {
   const x = normalizeHex(a).slice(1), y = normalizeHex(b).slice(1);
@@ -50,7 +50,7 @@ export function renderCardSVG(state, {animated = true, time = 0} = {}) {
   const username = (state.username || 'username').replace(/^@+/, '').trim();
   const bio = (state.bio || 'BUILDING ON THE INTERNET').trim();
   const bioLines = wrapText(bio, wide ? 28 : 42, 2);
-  const phase=(time % 3.2)/3.2*2*Math.PI;
+  const phase=(time % AURA_LOOP_SECONDS)/AURA_LOOP_SECONDS*2*Math.PI;
   const scene = graphics(state.scene, base, accent);
   const frame = wide ? `M26 26H1174V604H26Z` : `M22 22H698V698H22Z`;
   const glyphs = `<g stroke="${accent}" stroke-width="3" fill="none" opacity=".85"><path d="M42 ${wide?145:144}h50m-25-25v50M${w-108} ${wide?495:415}h56m-28-28v56"/><circle cx="${w-60}" cy="60" r="12"/><path d="M${w-72} 60h24"/></g>`;
@@ -58,42 +58,39 @@ export function renderCardSVG(state, {animated = true, time = 0} = {}) {
   // No preset character: only an uploaded photograph or a neutral empty-photo affordance.
   const placeholder=`<g opacity=".9"><rect x="${photoX}" y="${photoY}" width="${photoW}" height="${photoH}" rx="24" fill="${mix(base,accent,.12)}" stroke="${accent}" stroke-opacity=".6" stroke-width="2.5" stroke-dasharray="12 12"/><g transform="translate(${photoX+photoW/2} ${photoY+photoH/2-17})" stroke="${mix(accent,'#FFFFFF',.3)}" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><rect x="-43" y="-33" width="86" height="67" rx="10"/><circle cx="-17" cy="-10" r="6"/><path d="m-36 26 23-23 19 19 13-13 18 18"/></g>${txt('ADD YOUR PHOTO',photoX+photoW/2,photoY+photoH/2+92,19,mix(accent,'#FFFFFF',.35),{weight:800,spacing:2,width:photoW-32}).replace('<text ', '<text text-anchor="middle" ')}</g>`;
   const photoArt=photoSVG(state.photo,photoX,photoY,photoW,photoH);
-  const art=`<g class="${animated?'aura-photo':''}" transform="translate(0 ${(Math.sin(phase)*5).toFixed(2)})">${photoArt||placeholder}</g>`;
+  const art=`<g class="${animated?'aura-photo':''}" transform="translate(${(Math.cos(phase)*5).toFixed(2)} ${(Math.sin(phase)*16).toFixed(2)})">${photoArt||placeholder}</g>`;
   const aurora = wide ? `<ellipse cx="306" cy="304" rx="218" ry="220" fill="url(#pcAura)" opacity=".83"/>` : `<ellipse cx="358" cy="259" rx="226" ry="222" fill="url(#pcAura)" opacity=".8"/>`;
   let info;
   if (wide) {
     const x=627,y=74,pw=526,ph=484;
     info = `<g><rect x="${x}" y="${y}" width="${pw}" height="${ph}" rx="24" fill="${panel}" stroke="${mix(panel,ink,.22)}" stroke-width="1.5"/>
       <rect x="${x+25}" y="${y+30}" width="37" height="5" rx="2.5" fill="${accent}"/>
-      ${txt('DIGITAL IDENTITY  /  001',x+77,y+38,15,muted,{weight:700,spacing:1.3})}
-      ${txt(name.toUpperCase(),x+32,y+163,Math.max(38,64-Math.max(0,name.length-12)*2),ink,{weight:900,width:pw-65,spacing:-1.5})}
-      ${txt('@'+username,x+34,y+207,25,accent,{weight:700,width:pw-72})}
-      <path d="M${x+32} ${y+248}h${pw-64}" stroke="${accent}" stroke-opacity=".42"/>
-      ${bioLines.map((line,i)=>txt(line,x+34,y+290+i*35,25,muted,{width:pw-68})).join('')}
-      ${tagsSVG(state.tags,accent,ink,x+33,y+385,true)}
-      ${txt('AURA / ONLINE',x+34,y+456,14,accent,{weight:800,spacing:2})}
+      ${txt(name.toUpperCase(),x+32,y+137,Math.max(38,64-Math.max(0,name.length-12)*2),ink,{weight:900,width:pw-65,spacing:-1.5})}
+      ${txt('@'+username,x+34,y+179,25,accent,{weight:700,width:pw-72})}
+      <path d="M${x+32} ${y+221}h${pw-64}" stroke="${accent}" stroke-opacity=".42"/>
+      ${bioLines.map((line,i)=>txt(line,x+34,y+264+i*35,25,muted,{width:pw-68})).join('')}
+      ${tagsSVG(state.tags,accent,ink,x+33,y+351,true)}
+      ${txt('AURA / ONLINE',x+34,y+445,14,accent,{weight:800,spacing:2})}
       <path d="M${x+pw-64} ${y+446}h30" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>
     </g>`;
   } else {
-    const x=30,y=456,pw=660,ph=232;
+    const x=30,y=434,pw=660,ph=254;
     info = `<g><rect x="${x}" y="${y}" width="${pw}" height="${ph}" rx="22" fill="${panel}" stroke="${mix(panel,ink,.25)}" stroke-width="1.4"/>
        <rect x="${x+23}" y="${y+27}" width="30" height="4" rx="2" fill="${accent}"/>
-       ${txt('IDENTITY / 001',x+65,y+33,13,muted,{weight:800,spacing:1.5})}
-       ${txt(name.toUpperCase(),x+32,y+102,Math.max(34,54-Math.max(0,name.length-13)*1.7),ink,{weight:900,width:pw-65,spacing:-1.3})}
-       ${txt('@'+username,x+34,y+134,22,accent,{weight:700,width:pw-70})}
-       ${bioLines.map((line,i)=>txt(line,x+34,y+164+i*24,20,muted,{width:pw-70})).join('')}
-       ${tagsSVG(state.tags,accent,ink,x+33,y+194)}
+       ${txt(name.toUpperCase(),x+32,y+69,Math.max(34,54-Math.max(0,name.length-13)*1.7),ink,{weight:900,width:pw-65,spacing:-1.3})}
+       ${txt('@'+username,x+34,y+103,22,accent,{weight:700,width:pw-70})}
+       ${bioLines.map((line,i)=>txt(line,x+34,y+143+i*24,20,muted,{width:pw-70})).join('')}
+       ${tagsSVG(state.tags,accent,ink,x+33,y+188)}
     </g>`;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="ProfileCard for ${escapeXML(name)}" data-format="${state.format}">
     <defs><linearGradient id="pcBackground" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${mix(base,accent,.13)}"/><stop offset="1" stop-color="${mix(base,'#000000',.24)}"/></linearGradient><radialGradient id="pcAura"><stop offset="0" stop-color="${accent}" stop-opacity=".7"/><stop offset=".48" stop-color="${accent}" stop-opacity=".26"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs>
     <rect width="${w}" height="${h}" fill="url(#pcBackground)"/>
-    <g transform="scale(${w/720} ${h/720}) translate(${(Math.sin(phase)*7).toFixed(2)} ${(Math.cos(phase)*6).toFixed(2)})">${scene}</g>
+    <g transform="scale(${w/720} ${h/720}) translate(${(Math.sin(phase)*18).toFixed(2)} ${(Math.cos(phase)*14).toFixed(2)})"><g class="${animated?'aura-scene':''}">${scene}</g></g>
     <path d="${frame}" fill="none" stroke="${mix(base,'#FFFFFF',.65)}" stroke-opacity=".25" stroke-width="1.5"/>
-    <g opacity="${(.88+.12*Math.cos(phase)).toFixed(3)}" class="${animated?'aura-glow':''}">${aurora}</g>
-    <g transform="translate(${(Math.cos(phase)*4).toFixed(2)} ${(Math.sin(phase)*4).toFixed(2)})" class="${animated?'aura-lines':''}">${glyphs}</g>
+    <g transform="translate(${(Math.sin(phase)*18).toFixed(2)} ${(Math.cos(phase)*13).toFixed(2)})" opacity="${(.72+.28*Math.cos(phase)).toFixed(3)}" class="${animated?'aura-glow':''}">${aurora}</g>
+    <g transform="translate(${(Math.cos(phase)*12).toFixed(2)} ${(Math.sin(phase)*10).toFixed(2)})" class="${animated?'aura-lines':''}">${glyphs}</g>
     ${art}
     ${info}
-    ${wide ? txt('PROFILECARD  //  V1.4',46,593,14,contrastColor(base),{weight:700,spacing:1.7}) : txt('PROFILECARD  /  V1.4',45,42,13,contrastColor(base),{weight:800,spacing:1.5})}
   </svg>`;
 }
