@@ -28,22 +28,21 @@
     <main class="workspace" aria-label="ProfileCard aura studio">
       <section class="preview-panel" aria-labelledby="previewHeading">
         <div class="panel-topline">
-          <div><p class="eyebrow">LIVE CANVAS / PROFILE 001</p><h1 id="previewHeading">Make your own aura<span class="heading-star">↗</span></h1></div>
-          <span class="live-label"><span class="live-dot"></span> Live preview</span>
+          <div><h1 id="previewHeading">Make your own aura<span class="heading-star">↗</span></h1></div>
         </div>
         <div class="preview-stage" id="previewStage">
           <div class="stage-confetti" id="magicBurst" aria-hidden="true"><span>✧</span><span>◇</span><span>✧</span><span>◇</span><span>✧</span></div>
           <div id="cardMount" class="card-mount" aria-live="off"></div>
         </div>
         <div class="preview-actions">
-          <button type="button" class="action-primary" id="downloadBtn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v3h16v-3"/></svg> Download PNG</button><button type="button" class="action-gif" id="downloadGifBtn" aria-label="Download an animated GIF">✦ GIF <span class="gif-small">3s loop</span></button>
+          <button type="button" class="action-primary" id="downloadBtn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v3h16v-3"/></svg> Download PNG</button><button type="button" class="action-gif" id="downloadGifBtn" aria-label="Download an animated GIF">✦ GIF <span class="gif-small">2.4s loop</span></button>
           <button type="button" class="action-secondary" id="copyBtn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg> Copy image</button>
         </div>
         <div class="export-progress" id="exportProgress" hidden role="status" aria-live="polite"><span id="exportProgressLabel">Preparing animation…</span><progress id="exportProgressBar" max="100" value="0"></progress><button id="cancelGifBtn" type="button">Cancel</button></div>
-        <p class="preview-note"><span class="signal-dot"></span> No watermark <span class="separator">/</span> No sign-up <span class="separator">/</span> Made to share</p>
+        
       </section>
       <section class="editor-panel" aria-labelledby="editorHeading">
-        <div class="editor-heading"><div><p class="eyebrow">CUSTOMIZATION PANEL</p><h2 id="editorHeading">Shape your identity<span>✦</span></h2></div><span class="tiny-number">V1.4</span></div>
+        <div class="editor-heading"><div><p class="eyebrow">CUSTOMIZATION PANEL</p><h2 id="editorHeading">Shape your identity<span>✦</span></h2></div></div>
         <div class="editor-tabs" role="tablist" aria-label="Editor sections">
           <button type="button" class="editor-tab active" id="tabIdentity" role="tab" aria-selected="true" aria-controls="panelIdentity" data-tab="identity">Identity</button>
           <button type="button" class="editor-tab" id="tabPhoto" role="tab" aria-selected="false" aria-controls="panelPhoto" data-tab="photo" tabindex="-1">Photo</button>

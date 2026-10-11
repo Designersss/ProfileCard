@@ -1,4 +1,4 @@
-import { FORMATS, MAX, PALETTES, SCENES, escapeXML, getSavedState, randomize, sanitizeText } from './utils.js';
+import { AURA_LOOP_SECONDS, FORMATS, MAX, PALETTES, SCENES, escapeXML, getSavedState, randomize, sanitizeText } from './utils.js';
 import { renderCardSVG } from './card.js';
 
 const $ = (id) => document.getElementById(id);
@@ -209,7 +209,7 @@ async function exportGif(){
  const button=$('downloadGifBtn'),progress=$('exportProgress'),bar=$('exportProgressBar'),label=$('exportProgressLabel');
  const profile={...state,tags:[...state.tags]};
  const width=profile.format==='wide'?600:420,height=profile.format==='wide'?315:420;
- const fps=10,frames=32;
+ const fps=10,frames=Math.round(AURA_LOOP_SECONDS*fps);
  let worker;
  button.disabled=true;progress.hidden=false;bar.value=0;
  try{

@@ -34,9 +34,9 @@ h1, h2{font-size:clamp(19px,1.7vw,25px);letter-spacing:-.9px;line-height:1.1;mar
 .card-mount > svg{display:block;max-height:100%;max-width:100%;height:100%;width:auto;aspect-ratio:1;overflow:hidden;border-radius:13px}
 .card-mount > svg[data-format=wide]{width:100%;height:auto;aspect-ratio:1200/630;max-height:100%;border-radius:11px}
 .card-mount.card-changing > svg{animation:card-reveal .64s cubic-bezier(.22,1,.3,1) both}
-.aura-photo{animation:photo-drift 6s ease-in-out infinite;transform-origin:50% 50%}
-.aura-glow{animation:aura-pulse 5.6s ease-in-out infinite;transform-origin:center}
-.aura-lines{animation:lines-drift 7s ease-in-out infinite alternate}
+.aura-photo{animation:photo-drift 2.4s ease-in-out infinite;transform-origin:center}
+.aura-glow{animation:aura-pulse 2.4s ease-in-out infinite;transform-origin:center;transform-box:fill-box}
+.aura-lines{animation:lines-drift 2.4s ease-in-out infinite}
 .stage-confetti{position:absolute;inset:0;pointer-events:none;z-index:2}
 .stage-confetti span{position:absolute;opacity:0;color:#775bf1;font-size:22px}
 .stage-confetti span:nth-child(1){top:20%;left:19%}
@@ -128,9 +128,11 @@ h1, h2{font-size:clamp(19px,1.7vw,25px);letter-spacing:-.9px;line-height:1.1;mar
 .dialog-inner button{width:100%}
 .dialog-icon{font-size:35px;color:#7658ef;margin-bottom:13px}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-@keyframes photo-drift{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-@keyframes aura-pulse{0%,100%{opacity:.8;transform:scale(1)}50%{opacity:1;transform:scale(1.025)}}
-@keyframes lines-drift{to{opacity:.57;transform:translate(4px,-3px)}}
+@keyframes photo-drift{0%,100%{transform:translate(0,0)}25%{transform:translate(5px,-13px)}50%{transform:translate(0,-19px)}75%{transform:translate(-5px,-7px)}}
+@keyframes aura-pulse{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.085)}}
+@keyframes lines-drift{0%,100%{opacity:.86;transform:translate(-9px,7px)}50%{opacity:1;transform:translate(10px,-9px)}}
+.aura-scene{animation:scene-drift 2.4s ease-in-out infinite}
+@keyframes scene-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(13px,-11px)}}
 @keyframes card-reveal{0%{opacity:.32;transform:scale(.965);filter:brightness(1.35) blur(4px)}60%{opacity:1;filter:brightness(1.07) blur(0)}100%{transform:scale(1);filter:none}}
 @keyframes energy-flare{0%{opacity:0;transform:translateY(9px) scale(.4)}30%{opacity:.95}100%{opacity:0;transform:translateY(-28px) scale(1.4)}}
 @keyframes magic-spin{to{transform:rotate(180deg)}}

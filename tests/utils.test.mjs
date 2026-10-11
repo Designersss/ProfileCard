@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { escapeXML,normalizeHex,contrastColor,wrapText,randomize,createDefaultState,getSavedState,FORMATS,PALETTES,SCENES } from '../src/utils.js';
+import { AURA_LOOP_SECONDS,escapeXML,normalizeHex,contrastColor,wrapText,randomize,createDefaultState,getSavedState,FORMATS,PALETTES,SCENES } from '../src/utils.js';
 import { renderCardSVG } from '../src/card.js';
 import { GifEncoder } from '../src/gif.js';
 
@@ -68,7 +68,8 @@ test('square and wide aura animations support deterministic GIF frames',()=>{
   const base={...createDefaultState(),format,sceneColor:palette.scene,cardColor:palette.card,accentColor:palette.accent};
   const a=renderCardSVG(base,{animated:false,time:0});const b=renderCardSVG(base,{animated:false,time:1});
   assert.ok(a.includes(`viewBox="0 0 ${FORMATS[format].width} ${FORMATS[format].height}"`));
-  assert.ok(a.includes('AURA / ONLINE')||a.includes('IDENTITY / 001'));
+  assert.ok(a.includes('AURA / ONLINE')||a.includes('ADD YOUR PHOTO'));
+  for(const unwanted of ['PROFILECARD  /  V1.4','IDENTITY / 001','DIGITAL IDENTITY  /  001'])assert.ok(!a.includes(unwanted));
   assert.notEqual(a,b);assert.equal(a,renderCardSVG(base,{animated:false,time:0}));
  }
 });
@@ -94,4 +95,35 @@ test('GIF rejects invalid sizes and pixel arrays',()=>{
  assert.throws(()=>new GifEncoder(0,100));
  const encoder=new GifEncoder(100,50);assert.throws(()=>encoder.addFrame(new Uint8Array(3)));
  assert.throws(()=>encoder.finish());
+});
+
+
+test('the 2.4s motion loop advances visibly and loops cleanly',()=>{
+ assert.equal(AURA_LOOP_SECONDS,2.4);
+ const state={...createDefaultState(),format:'square'};
+ const start=renderCardSVG(state,{animated:false,time:0});
+ const midpoint=renderCardSVG(state,{animated:false,time:AURA_LOOP_SECONDS/2});
+ const restart=renderCardSVG(state,{animated:false,time:AURA_LOOP_SECONDS});
+ assert.notEqual(start,midpoint);
+ assert.equal(start,restart);
+ assert.match(start,/translate\(0\.00 14\.00\)/);
+ assert.match(midpoint,/translate\(0\.00 -14\.00\)/);
+});
+
+test('square tag chips leave room above the card lower border',()=>{
+ const square=renderCardSVG({...createDefaultState(),format:'square',tags:['maker']},{animated:false});
+ assert.match(square,/y="622"[^>]+height="32"/);
+ assert.ok(688-(622+32)>=30);
+});
+
+test('removed UI labels are not present in the HTML or rendered cards',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const {fileURLToPath}=await import('node:url');
+ const html=await readFile(fileURLToPath(new URL('../index.html',import.meta.url)),'utf8');
+ const bad=['LIVE CANVAS / PROFILE 001','Live preview','No watermark','Made to share','V1.4'];
+ for(const text of bad)assert.ok(!html.includes(text),`unexpected label: ${text}`);
+ for(const format of Object.keys(FORMATS)){
+  const svg=renderCardSVG({...createDefaultState(),format},{animated:false});
+  for(const text of ['PROFILECARD','IDENTITY / 001','V1.4'])assert.ok(!svg.includes(text),`unexpected SVG label: ${text}`);
+ }
 });

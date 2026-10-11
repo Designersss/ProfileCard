@@ -1,4 +1,5 @@
 /** Lightweight shared utilities: pure functions suitable for Node and the browser. */
+export const AURA_LOOP_SECONDS = 2.4; // Shared, seamless preview / GIF motion loop.
 export const MAX = Object.freeze({ name: 32, username: 24, bio: 100, tag: 18, tags: 3 });
 
 export function escapeXML(value = '') {
