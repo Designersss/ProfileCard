@@ -70,8 +70,6 @@ export function renderCardSVG(state, {animated = true, time = 0} = {}) {
       <path d="M${x+32} ${y+221}h${pw-64}" stroke="${accent}" stroke-opacity=".42"/>
       ${bioLines.map((line,i)=>txt(line,x+34,y+264+i*35,25,muted,{width:pw-68})).join('')}
       ${tagsSVG(state.tags,accent,ink,x+33,y+351,true)}
-      ${txt('AURA / ONLINE',x+34,y+445,14,accent,{weight:800,spacing:2})}
-      <path d="M${x+pw-64} ${y+446}h30" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>
     </g>`;
   } else {
     const x=30,y=434,pw=660,ph=254;

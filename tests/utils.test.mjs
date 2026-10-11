@@ -1,9 +1,15 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { AURA_LOOP_SECONDS,escapeXML,normalizeHex,contrastColor,wrapText,randomize,createDefaultState,getSavedState,FORMATS,PALETTES,SCENES } from '../src/utils.js';
 import { renderCardSVG } from '../src/card.js';
 import { GifEncoder } from '../src/gif.js';
 
+test('studio actions use the short Reroll label',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/id="randomBtn"[^>]*>[^<]*<span[^>]*>[^<]*<\/span> Reroll <svg/);
+ assert.ok(!html.includes('Reroll Aura'));
+});
 test('user-entered SVG text is escaped, including photo-only cards',()=>{
  assert.equal(escapeXML('<script>&"'), '&lt;script&gt;&amp;&quot;');
  const svg=renderCardSVG({...createDefaultState(),name:'<script>alert(1)</script>'});
@@ -68,7 +74,8 @@ test('square and wide aura animations support deterministic GIF frames',()=>{
   const base={...createDefaultState(),format,sceneColor:palette.scene,cardColor:palette.card,accentColor:palette.accent};
   const a=renderCardSVG(base,{animated:false,time:0});const b=renderCardSVG(base,{animated:false,time:1});
   assert.ok(a.includes(`viewBox="0 0 ${FORMATS[format].width} ${FORMATS[format].height}"`));
-  assert.ok(a.includes('AURA / ONLINE')||a.includes('ADD YOUR PHOTO'));
+  assert.ok(!a.includes('AURA / ONLINE'));
+  assert.ok(a.includes('ADD YOUR PHOTO'));
   for(const unwanted of ['PROFILECARD  /  V1.4','IDENTITY / 001','DIGITAL IDENTITY  /  001'])assert.ok(!a.includes(unwanted));
   assert.notEqual(a,b);assert.equal(a,renderCardSVG(base,{animated:false,time:0}));
  }

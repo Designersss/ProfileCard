@@ -1,5 +1,5 @@
 /* Offline-first shell; update the version when releasing changes. */
-const CACHE='profilecard-v1-5-20261011';
+const CACHE='profilecard-v1-5-1-20261011';
 const SHELL=[
   './','./index.html','./styles.css',
   './src/app.js','./src/card.js','./src/utils.js',
