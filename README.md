@@ -18,7 +18,7 @@ Visit `http://localhost:4173`. Run `npm run check` for unit tests and project va
 - Upload or replace a **JPEG, PNG or WebP photograph** (max 4 MB); resize locally and persist in IndexedDB. Remove photo from card and local database with one action. The empty state is a neutral photo placeholder.
 - Name, username, bio, three tags; square and landscape outputs. Square tags have dedicated spacing above the lower border.
 - Eight curated palettes, six geometric scenes, independent scene/info/accent colors.
-- Reroll Aura only changes styling — never your photo or profile text.
+- Reroll only changes styling — never your photo or profile text.
 - Faster and more visible 2.4-second motion for light, background, decorative lines, and floating photo in preview; downloadable static PNG and 2.4-second GIF loop at 10fps. GIF encoding runs in an offline Web Worker, with cancel/progress.
 - Offline-capable installable PWA. No analytics, cloud storage or third-party runtime resources.
 
