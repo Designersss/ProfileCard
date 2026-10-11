@@ -16,3 +16,5 @@ jobs:
           node-version: '22'
       - name: Unit and static checks
         run: npm run check
+      - name: Verify Cloudflare deployment bundle
+        run: npm run build

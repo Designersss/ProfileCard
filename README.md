@@ -40,9 +40,22 @@ All input and resized photo bytes stay in your browser. Profile fields and theme
 
 ## Deployment and checks
 
-Serve the repository root from a secure HTTPS static host. Relative paths support nested hosting directories. The service worker caches the shell, editor and GIF worker for offline use; bump its cache version on releases. Verify PWA install/refresh and GIF worker behavior on real HTTPS origins and physical iOS/Android devices before promoting a release.
+Build the public site with `npm run build`; this writes **only runtime assets** into `dist/` (no `node_modules/`, tests or source tooling). Serve `dist/` from a secure HTTPS static host. Relative paths support nested hosting directories. The service worker caches the shell, editor and GIF worker for offline use; bump its cache version on releases. Verify PWA install/refresh and GIF worker behavior on real HTTPS origins and physical iOS/Android devices before promoting a release.
 
 Run `npm run check` and validate UI and exported PNG/GIF in browsers. `prefers-reduced-motion` disables continuous preview motion but does not prevent an explicitly requested GIF export.
+
+### Cloudflare Workers Builds
+
+This repository deploys through **Workers Builds** using `npx wrangler deploy`. The tracked `wrangler.jsonc` serves **`./dist`**, not the repository root. This excludes `node_modules/` and the oversized `workerd` binary.
+
+Cloudflare Dashboard → **Workers & Pages → profilecard → Settings → Builds**:
+
+- **Build command:** `npm run build` (replace `exit 0`).
+- **Deploy command:** `npx wrangler deploy` (leave as-is).
+- **Root directory:** `/`.
+- **Production branch:** `main`.
+
+After saving, retry the deployment or trigger a new deployment from `main`. The PWA shell and GIF worker are included in the output.
 
 ## License
 
